@@ -8,6 +8,21 @@ class PaymentMethodImageBuilder
 {
     public static function set_payment_images(TapTreePaymentGateway $gateway)
     {
+        $impactElement = '';
+        $impact = $gateway->getImpactTitle();
+        if ($impact) {
+            $impactElement = '<div style="display:inline; font-weight: 500; font-size: smaller; background-color: #ddd;
+            border: none;
+            color: black;
+            padding: 3px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 16px;">-' . str_replace(".", ",", $gateway->getImpactTitle()) . '</div>';
+        };
+
         $logos = '';
         if ($gateway->get_option('applepay') === 'yes') {
             $logos = $logos . '<img style="width: 47px; height:30px; max-height: unset; margin: 0; padding: 0; float: right; vertical-algin: unset" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+Cjxzdmcgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDU1IDM1IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zOnNlcmlmPSJodHRwOi8vd3d3LnNlcmlmLmNvbS8iIHN0eWxlPSJmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDtzdHJva2UtbGluZWpvaW46cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MjsiPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMC45ODE4MTgsMCwwLDAuOTcwNTg4LDAuNSwwLjU1NjQxMSkiPgogICAgICAgIDxwYXRoIGQ9Ik01NSwzLjU0OEM1NSwxLjg0MiA1My42MzEsMC40NTcgNTEuOTQ0LDAuNDU3TDMuMDU2LDAuNDU3QzEuMzY5LDAuNDU3IDAsMS44NDIgMCwzLjU0OEwwLDMxLjM2NkMwLDMzLjA3MiAxLjM2OSwzNC40NTcgMy4wNTYsMzQuNDU3TDUxLjk0NCwzNC40NTdDNTMuNjMxLDM0LjQ1NyA1NSwzMy4wNzIgNTUsMzEuMzY2TDU1LDMuNTQ4WiIgc3R5bGU9InN0cm9rZTpibGFjaztzdHJva2Utd2lkdGg6MS4wMnB4OyIvPgogICAgPC9nPgogICAgPGcgdHJhbnNmb3JtPSJtYXRyaXgoMS4wODY0MywwLDAsMS4wODY0MywtMi44NTc2NywtMC45MDM4MzgpIj4KICAgICAgICA8cGF0aCBkPSJNMzguMjY5LDI0LjE4OEwzOC4yNjksMjIuOTQ5QzM4LjM4MywyMi45NzggMzguNjM5LDIyLjk3OCAzOC43NjcsMjIuOTc4QzM5LjQ3OSwyMi45NzggMzkuODYzLDIyLjY4MSA0MC4wOTgsMjEuOTE2QzQwLjA5OCwyMS45MDIgNDAuMjMzLDIxLjQ2MyA0MC4yMzMsMjEuNDU2TDM3LjUyOSwxNC4wMDNMMzkuMTk0LDE0LjAwM0w0MS4wODcsMjAuMDYyTDQxLjExNiwyMC4wNjJMNDMuMDA5LDE0LjAwM0w0NC42MzIsMTQuMDAzTDQxLjgyNywyMS44MzhDNDEuMTg3LDIzLjY0MyA0MC40NDcsMjQuMjI0IDM4Ljg5NSwyNC4yMjRDMzguNzY3LDI0LjIyNCAzOC4zODMsMjQuMjA5IDM4LjI2OSwyNC4xODhMMzguMjY5LDI0LjE4OFpNMTguMTY3LDEyLjIzMkMxOC41NTEsMTEuNzU0IDE4LjgxMiwxMS4xMTMgMTguNzQzLDEwLjQ1N0MxOC4xODEsMTAuNDg1IDE3LjQ5NSwxMC44MjYgMTcuMDk4LDExLjMwNEMxNi43NDEsMTEuNzE0IDE2LjQyNSwxMi4zODIgMTYuNTA3LDEzLjAxMUMxNy4xMzksMTMuMDY1IDE3Ljc2OSwxMi42OTcgMTguMTY3LDEyLjIzMkwxOC4xNjcsMTIuMjMyWk0xOC43MzYsMTMuMTMzQzE3LjgxOSwxMy4wNzkgMTcuMDQsMTMuNjUxIDE2LjYwMiwxMy42NTFDMTYuMTY0LDEzLjY1MSAxNS40OTMsMTMuMTYxIDE0Ljc2OCwxMy4xNzRDMTMuODI1LDEzLjE4NyAxMi45NDksMTMuNzE4IDEyLjQ3LDE0LjU2MkMxMS40ODUsMTYuMjUxIDEyLjIxLDE4Ljc1NiAxMy4xNjgsMjAuMTMxQzEzLjYzMywyMC44MTEgMTQuMTk0LDIxLjU2MSAxNC45MzIsMjEuNTM0QzE1LjYzLDIxLjUwNiAxNS45MDQsMjEuMDg0IDE2Ljc1MywyMS4wODRDMTcuNiwyMS4wODQgMTcuODQ3LDIxLjUzNCAxOC41ODYsMjEuNTJDMTkuMzUyLDIxLjUwNyAxOS44MzEsMjAuODM5IDIwLjI5NiwyMC4xNThDMjAuODMsMTkuMzgzIDIxLjA0OCwxOC42MzQgMjEuMDYyLDE4LjU5M0MyMS4wNDgsMTguNTc5IDE5LjU4NSwxOC4wMjEgMTkuNTcxLDE2LjM0NkMxOS41NTcsMTQuOTQ0IDIwLjcyLDE0LjI3NyAyMC43NzUsMTQuMjM2QzIwLjExOCwxMy4yNyAxOS4wOTIsMTMuMTYxIDE4LjczNiwxMy4xMzNMMTguNzM2LDEzLjEzM1pNMjYuNzE5LDExLjIzNkMyOC43MTIsMTEuMjM2IDMwLjA5OSwxMi42MDIgMzAuMDk5LDE0LjU5MUMzMC4wOTksMTYuNTg2IDI4LjY4MywxNy45NiAyNi42NjksMTcuOTZMMjQuNDYzLDE3Ljk2TDI0LjQ2MywyMS40NDlMMjIuODY5LDIxLjQ0OUwyMi44NjksMTEuMjM2TDI2LjcxOSwxMS4yMzZaTTI0LjQ2MywxNi42MjlMMjYuMjkyLDE2LjYyOUMyNy42OCwxNi42MjkgMjguNDcsMTUuODg2IDI4LjQ3LDE0LjU5OEMyOC40NywxMy4zMDkgMjcuNjgsMTIuNTczIDI2LjI5OSwxMi41NzNMMjQuNDYzLDEyLjU3M0wyNC40NjMsMTYuNjI5TDI0LjQ2MywxNi42MjlaTTMwLjUxNiwxOS4zMzNDMzAuNTE2LDE4LjAzIDMxLjUxOSwxNy4yMzEgMzMuMjk5LDE3LjEzMUwzNS4zNDgsMTcuMDExTDM1LjM0OCwxNi40MzhDMzUuMzQ4LDE1LjYxIDM0Ljc4NiwxNS4xMTQgMzMuODQ3LDE1LjExNEMzMi45NTcsMTUuMTE0IDMyLjQwMiwxNS41MzkgMzIuMjY3LDE2LjIwNEwzMC44MTUsMTYuMjA0QzMwLjksMTQuODU5IDMyLjA1MywxMy44NjggMzMuOTA0LDEzLjg2OEMzNS43MTgsMTMuODY4IDM2Ljg3OCwxNC44MjQgMzYuODc4LDE2LjMxN0wzNi44NzgsMjEuNDQ5TDM1LjQwNSwyMS40NDlMMzUuNDA1LDIwLjIyNEwzNS4zNjksMjAuMjI0QzM0LjkzNiwyMS4wNTIgMzMuOTg5LDIxLjU3NiAzMy4wMDcsMjEuNTc2QzMxLjU0MSwyMS41NzYgMzAuNTE2LDIwLjY3IDMwLjUxNiwxOS4zMzNMMzAuNTE2LDE5LjMzM1pNMzUuMzQ4LDE4LjY2TDM1LjM0OCwxOC4wNzNMMzMuNTA1LDE4LjE4NkMzMi41ODcsMTguMjUgMzIuMDY3LDE4LjY1MyAzMi4wNjcsMTkuMjlDMzIuMDY3LDE5Ljk0MSAzMi42MDgsMjAuMzY2IDMzLjQzNCwyMC4zNjZDMzQuNTA4LDIwLjM2NiAzNS4zNDgsMTkuNjMgMzUuMzQ4LDE4LjY2WiIgc3R5bGU9ImZpbGw6d2hpdGU7Ii8+CiAgICA8L2c+Cjwvc3ZnPgo=" alt="Apple Pay" />';
@@ -46,15 +61,6 @@ class PaymentMethodImageBuilder
             $logos = $logos . '<img style="width: 47px; height:30px; max-height: unset; margin: 0; padding: 0; float: right; vertical-algin: unset" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAABGCAYAAACQRffVAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAt1JREFUeJztm09rE0EYh5+ZNJtis/EPUlstJNVWD3rpV9CPIHgoPYiXgp79Eh7Egx70IopH8RtoP0JBEMSiNgf7D5Qmu4Hs1uzrIaZNQ+xusWHS6Ty3LPObeZ+wTGZnJ3DCUN0fqt9W7gjcB+aAkpmSjowasKzgWfny7NvORQUgS0sj1crUK4R5Y+UNljfl6Zm7SqnWCEC1MvUIYV5rzdlz5zk1VkRrbbrI/yJJEhqNgO1fP0mSZKH6fWUDeKiqKyvXJcdHpZS+MHmJQmHUdK1HShQ12Vz/gYgkaLmhJSeLgC76JetkAQqFUYp+CUBLSy9qRN0CGCv6ZisbILtuSm5qFGUAz/NM1jRQ8vm2m4KKBsYAlDrek9RBdE3Avr2W/8AJ244Tth0nbDtO2HacsO04YdtxwrbjhG3HCduOE7YdJ2w7Tth2nLDtOGHbccK2M5K1oYgQBjUaYUgcx0D7JfpY0afol1BKDXW+QybhVus3WxvrxHG073oUNYmiJmFQZ3xiklyuf3em892k3tIi0newbuI4YmtjHREZunwvqcJhUDtwsO5Bw6A+dPleUoUbYZjayV7bYOjyvaQKxztx5gH7tTWd7+VIf5ayzZNm86nCXj77+a18n7am872kCh/mhF6/tqbzvaQKF/0SnldI7cjzCp0zjUOV7yVVWCnF+MTkgYN6XoHxicm+qx3T+V4yrbRyuREmLk4RBnUaYbA7G3r5bEs70/lDC0P7m/ZLp/FLp7NGhirf4cQ9LTlh23HCtuOEbccJ244GQgBJEsOlDI5kz62ugVU43M7CcWPnr5tAVQvqA2TbDzqudNy08F7rlrwAkjCoE0VNs5UNgKjZJGjvZrYSnTzX5dnZT8CT9v7vGkFQ677njy1JkhDUa2xtroEIoB5PT1/7vPeH6fLUS2DBbJmDQeB1ZXrmnlKqte+pefXrl9ugHqCYA84Yqu+o2EZYBnlauXL1nelijPEHSZmHPBOiDEsAAAAASUVORK5CYII=" alt="And More" />';
         }*/
 
-        return '<div style="display:inline; font-weight: 500; font-size: smaller; background-color: #ddd;
-        border: none;
-        color: black;
-        padding: 3px 10px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        margin: 4px 2px;
-        cursor: pointer;
-        border-radius: 16px;">-' . str_replace(".", ",", $gateway->getImpactTitle()) . '</div><div style="display: table"><div style="padding-left: 0px; margin-top:8px; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px">' . $logos . '</div></div>'; // substr($logos, 0, -228);
+        return $impactElement . '<div style="display: table"><div style="padding-left: 0px; margin-top:10px; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px">' . $logos . '</div></div>'; // substr($logos, 0, -228);
     }
 }
