@@ -106,4 +106,10 @@ function initialize()
     }
 }
 
+function register_assets()
+{
+    wp_register_style('taptree-style-overrides', plugins_url('/public/css/taptree-style-overrides.min.css', __FILE__), false, '1.0.0', 'all');
+}
+
 add_action('plugins_loaded', __NAMESPACE__ . '\initialize');
+add_action('init', __NAMESPACE__ . '\register_assets');
