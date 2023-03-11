@@ -89,6 +89,8 @@ class GatewayModule implements ServiceModule, ExecutableModule
         assert($paymentService instanceof PaymentService);
         //$logger->debug(__METHOD__);
 
+        wp_enqueue_style('taptree-style-overrides');
+
         // might loop over gateways in the future for individual payment method gateways
         $gatewayId = "taptree_wc_gateway_hosted_checkout";
         $gateways[] = new TapTreePaymentGateway(
