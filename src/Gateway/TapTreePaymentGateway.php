@@ -95,7 +95,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // Todo move this if we have more methods than just the hosted checkout
         $this->method_title        = __('TapTree Checkout', 'woocommerce');
         $this->method_description  = __('Process payments climate-friendly and secure with TapTree\'s Hosted Checkout solution.', 'woocommerce');
-        $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos Klimaschutzprojekte unterstützen.');
+        $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.');
 
         $this->init_form_fields();
         $this->init_settings();
@@ -113,7 +113,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
-            $this->title               = "TapTree ClimatePay"; //$this->getPaymentTitle();
+            $this->title               = "ClimatePay"; //$this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
             $this->initIcon();
@@ -746,7 +746,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             return __($currentImpact->highest_possible_impact->value . ' ' . $currentImpact->highest_possible_impact->unit, 'taptree-payments-for-woocommerce');
         }
 
-        return __('TapTree ClimatePay', 'taptree-payments-for-woocommerce'); //'TapTree ClimatePay'; // substr($logos, 0, -228);
+        return __(null, 'taptree-payments-for-woocommerce'); //'TapTree ClimatePay'; // substr($logos, 0, -228);
     }
 
     public function set_payment_description($description = "")
