@@ -133,7 +133,7 @@ class PaymentService
             $this->logger->debug($this->gateway->id . ": Process TapTree {$payment->mode} {$payment->object} object {$payment->id} with status {$payment->status} of order {$order->get_id()}.", [true]);
 
             // Check whether the order has already been paid and don't process the payment again
-            if ($this->isOrderPaid($order)) {
+            if ($this->gateway->isOrderPaid($order)) {
                 $this->httpResponse->setHttpResponseCode(200);
                 $this->logger->debug(__METHOD__ . " | Order $order_id is already paid and does not need an additional payment by TapTree", [true]);
 
@@ -212,47 +212,6 @@ class PaymentService
         return $this->paymentBrandName($payment_method);
     }
 
-    public function setOrderPaidWithTapTree(WC_Order $order)
-    {
-        $order->update_meta_data('_taptree_paid', '1');
-        $order->save();
-    }
-
-    public function isPaidByOtherGateway($order_id)
-    {
-        $order = wc_get_order($order_id);
-        return $order->get_payment_method() && (strpos($order->get_payment_method(), 'taptree') === false);
-    }
-
-    public function isOrderPaidWithTapTree(WC_Order $order)
-    {
-        return $order->get_meta('_taptree_paid') === '1';
-    }
-
-    public function isOrderPaid(WC_Order $order)
-    {
-        $order_id = $order->get_id();
-
-        // Check whether the order is processed and paid via another gateway
-        if ($this->isPaidByOtherGateway($order_id)) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id is paid by another gateway. Method used was " . $order->get_payment_method());
-            return true;
-        }
-
-        // Check whether the order is already processed and paid via TapTree
-        if ($this->isOrderPaidWithTapTree($order)) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id is already paid with TapTree. ");
-            return true;
-        }
-
-        // Check whether the order itself needs payment
-        if (!$order->needs_payment()) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id does not need payment. ");
-            return true;
-        }
-
-        return false;
-    }
 
     /**
      * @param WC_Order
@@ -291,14 +250,14 @@ class PaymentService
         // payment is ready to be captured
         try {
             $capture = $this->taptreeApi->capture_payment($payment->id);
-
+            $this->logger->debug(__METHOD__ . ":  " . json_encode($capture));
             // tell merchant which amount has been captured/paid.
             $order->add_order_note(__($capture->amount_captured->value . " " . $capture->amount_captured->currency . " captured from customer.", 'woocommerce'));
             $this->logger->debug($this->gateway->id . ": Payment captured. ");
 
             // we automatically capture the full amount, so this should always be true
             // yet play safe
-            if ($capture->total_amount_captured->value === $capture->amount->value) {
+            if ($capture->total_amount_captured->value === $capture->amount_captured->value) {
                 $this->logger->debug($this->gateway->id . ": Captured full amount. ");
                 $this->handle_payment_WOO_STATUS_COMPLETED($order, $payment);
                 return;
@@ -436,8 +395,6 @@ class PaymentService
         if (isset(WC()->cart)) {
             WC()->cart->empty_cart();
         }
-
-        $this->setOrderPaidWithTapTree($order);
 
         $order->add_order_note(__('Payment completed', 'woocommerce')); // Make consistent with api
         $order->payment_complete($payment->id);

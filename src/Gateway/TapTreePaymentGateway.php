@@ -532,7 +532,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $returnRedirect = $this->get_return_url($order);
         $failedRedirect = $order->get_checkout_payment_url(false);
 
-        if ($this->orderNeedsPayment($order)) {
+        if (!$this->isOrderPaid($order)) {
             return $failedRedirect;
         }
         do_action(
@@ -544,18 +544,42 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         return $returnRedirect;
     }
 
-    /**
-     * @param WC_Order $order
-     *
-     * @return bool
-     */
-    public function orderNeedsPayment(WC_Order $order)
+    public function setOrderPaidWithTapTree(WC_Order $order)
+    {
+        $order->update_meta_data('_taptree_paid', '1');
+        $order->save();
+    }
+
+    public function isPaidByOtherGateway($order_id)
+    {
+        $order = wc_get_order($order_id);
+        return $order->get_payment_method() && (strpos($order->get_payment_method(), 'taptree') === false);
+    }
+
+    public function isOrderPaidWithTapTree(WC_Order $order)
+    {
+        return $order->get_meta('_taptree_paid') === '1';
+    }
+
+    public function isOrderPaid(WC_Order $order)
     {
         $order_id = $order->get_id();
 
-        if ($order->needs_payment()) {
-            $this->logger->debug(__METHOD__ . ' ' . $this->id . ': Order ' . $order_id . ' orderNeedsPayment check: yes, WooCommerce thinks order needs payment.', [true]);
+        // Check whether the order is processed and paid via another gateway
+        if ($this->isPaidByOtherGateway($order_id)) {
+            $this->logger->debug($this->gateway->id . ": Order $order_id is paid by another gateway. Method used was " . $order->get_payment_method());
+            return true;
+        }
 
+        // Check whether the order is already processed and paid via TapTree
+        if ($this->isOrderPaidWithTapTree($order)) {
+            $this->logger->debug($this->gateway->id . ": Order $order_id is already paid with TapTree. ");
+            return true;
+        }
+
+        // Check whether the order itself needs payment
+        if (!$order->needs_payment()) {
+            $this->logger->debug($this->gateway->id . ": Order $order_id does not need payment. ");
             return true;
         }
 
@@ -690,8 +714,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     private function getImpact()
     {
         // If we have no WC() object, we can't do anything
-        if (!(WC() && WC()->cart && WC()->cart))
+
+        if (!(WC() && WC()->cart))
             return;
+
 
         // If we have an impact, return it
         // We store it in the class instance and in the session
@@ -707,25 +733,24 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // - not an admin page
         if (
             !$this->taptreeApi ||
-            !is_checkout() ||
+            //!is_checkout() ||
             !wp_doing_ajax() ||
             is_admin()
         ) {
             return;
         }
 
+        WC()->cart->get_cart();
+        //WC()->cart->calculate_totals();
 
-        $total = 0;
-        if (WC()->cart->total != 0) {
+        // some hacky way to get the total amount
+        // we need this as the Germanized plugin set cart->total to 0
+        $total = floatval(preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total()));
+        if (total == 0) {
             $total = WC()->cart->total;
-        } else {
-            // some hacky way to get the total amount
-            // we need this as the Germanized plugin set cart->total to 0
-            // todo: find a better way to get the total amount
-            $total = floatval(preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total()));
-            //$this->logger->debug(__METHOD__ . " | else: " . $total);
         }
 
+        // still no total so just return
         if ($total == 0)
             return;
 
