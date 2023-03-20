@@ -746,7 +746,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // some hacky way to get the total amount
         // we need this as the Germanized plugin set cart->total to 0
         $total = floatval(preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total()));
-        if (total == 0) {
+        if ($total == 0) {
             $total = WC()->cart->total;
         }
 
