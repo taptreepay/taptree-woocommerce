@@ -160,7 +160,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public function getWebhookUrl($order)
     {
-        $webhookUrl = WC()->api_request_url($this->gatewayId);
+        $webhookUrl = WC()->api_request_url($this->id);
         $webhookUrl = $webhookUrl . $this->webhookSlug;
         $webhookUrl = $this->asciiDomainName($webhookUrl);
         $orderId = $order->get_id();
@@ -272,20 +272,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $available_currencies = array('EUR');
 
         return in_array($current_currency, $available_currencies, true);
-    }
-
-    protected function initDescription()
-    {
-        $description = $this->paymentMethod->getProcessedDescription();
-        if ($description)
-            $this->description = empty($description) ? false : $description;
-    }
-
-    protected function gatewayId()
-    {
-        $paymentMethodId = $this->paymentMethod->getProperty('id');
-        $this->id = 'taptree_wc_gateway_' . $paymentMethodId;
-        return $this->id;
     }
 
     protected function orderDoesNotExistFailure($order_id): array
