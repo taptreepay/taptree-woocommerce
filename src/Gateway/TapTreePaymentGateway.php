@@ -553,19 +553,19 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         // Check whether the order is processed and paid via another gateway
         if ($this->isPaidByOtherGateway($order_id)) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id is paid by another gateway. Method used was " . $order->get_payment_method());
+            $this->logger->debug($this->id . ": Order $order_id is paid by another gateway. Method used was " . $order->get_payment_method());
             return true;
         }
 
         // Check whether the order is already processed and paid via TapTree
         if ($this->isOrderPaidWithTapTree($order)) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id is already paid with TapTree. ");
+            $this->logger->debug($this->id . ": Order $order_id is already paid with TapTree. ");
             return true;
         }
 
         // Check whether the order itself needs payment
         if (!$order->needs_payment()) {
-            $this->logger->debug($this->gateway->id . ": Order $order_id does not need payment. ");
+            $this->logger->debug($this->id . ": Order $order_id does not need payment. ");
             return true;
         }
 
