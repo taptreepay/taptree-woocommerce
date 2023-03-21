@@ -160,8 +160,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public function getWebhookUrl($order)
     {
-        $webhookUrl = WC()->api_request_url($this->id);
-        $webhookUrl = $webhookUrl . $this->webhookSlug;
+        $webhookUrl = WC()->api_request_url($this->webhookSlug);
         $webhookUrl = $this->asciiDomainName($webhookUrl);
         $orderId = $order->get_id();
         $orderKey = $order->get_order_key();
