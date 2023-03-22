@@ -696,6 +696,34 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         );
     }
 
+    private function getCartTotal() {
+        if (!(WC() && WC()->cart))
+            return;
+
+        WC()->cart->get_cart();
+        //WC()->cart->calculate_totals();
+
+        try {
+            if (WC()->cart->total != 0 && preg_match('/^\d+[.]\d+$/', WC()->cart->total)) {
+                return floatval(WC()->cart->total);
+            }
+
+            // some hacky way to get the total amount
+            // we need this as the Germanized plugin set cart->total to 0
+            $total_str = preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total());
+        
+            if (preg_match('/^\d+[.]\d+$/', $total_str)) {
+	            return floatval($total_str);
+            } else {
+	            $split = preg_split( '/[.,]/', $total_str );
+	            $total = floatval(implode(array_slice($split, 0, -1, true)) . '.' . end($split));
+	            return $total;
+            }
+        } catch (Exception $e) {
+            return;
+        }
+    }
+
     private function getImpact()
     {
         // If we have no WC() object, we can't do anything
@@ -728,14 +756,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         WC()->cart->get_cart();
         //WC()->cart->calculate_totals();
 
-        // some hacky way to get the total amount
-        // we need this as the Germanized plugin set cart->total to 0
-        $total = floatval(preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total()));
-        if ($total == 0) {
-            $total = WC()->cart->total;
-        }
+        $total = $this->getCartTotal();
 
-        // still no total so just return
+        // no total so just return
         if ($total == 0)
             return;
 
