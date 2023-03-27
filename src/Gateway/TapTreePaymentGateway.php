@@ -732,11 +732,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         
             if (preg_match('/^\d+[.]\d+$/', $total_str)) {
 	            return floatval($total_str);
-            } else {
-	            $split = preg_split( '/[.,]/', $total_str );
-	            $total = floatval(implode(array_slice($split, 0, -1, true)) . '.' . end($split));
-	            return $total;
             }
+
+	        $split = preg_split( '/[.,]/', $total_str );
+	        $total = floatval(implode(array_slice($split, 0, -1, true)) . '.' . end($split));
+	        return $total;
         } catch (Exception $e) {
             return;
         }
