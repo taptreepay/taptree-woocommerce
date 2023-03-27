@@ -22,6 +22,13 @@ return array(
         'description' => __('Insert your TapTree API key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Use test keys for test mode and use live keys for production only!', 'woocommerce'),
         //'desc_tip'      => true,
     ),
+    'as_redirect' => array(
+        'title' => __('Popup', 'woocommerce'),
+        'type' => 'checkbox',
+        'label' => __('Checkout as Redirect', 'woocommerce'),
+        'description' => __( 'Check this option if you do not want to open the TapTree Checkout Popup but have your clients redirected instead.', 'woocommerce' ),
+        'default' => 'no'
+    ),
     'visa' => array(
         'title' => __('Visa', 'woocommerce'),
         'type' => 'checkbox',

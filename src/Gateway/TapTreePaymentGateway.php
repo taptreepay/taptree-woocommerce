@@ -106,6 +106,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         $this->enabled = $this->get_option('enabled');
 
+        
+        $this->as_redirect = $this->get_option('as_redirect');
+
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
 
@@ -117,6 +120,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->description = $this->set_payment_description();
 
             $this->initIcon();
+
+            if ($this->as_redirect === 'no') {
+                $this->initModal();
+            }
 
             if (!has_action('woocommerce_thankyou_' . $this->id)) {
                 add_action(
@@ -262,6 +269,17 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         $output = $this->icon ?: '';
         return apply_filters('woocommerce_gateway_icon', $output, $this->id);
+    }
+
+    public function initModal()
+    {
+        wp_enqueue_script(
+			'taptree-checkout-as-modal',
+			untrailingslashit( '/wp-content/plugins/taptree-woocommerce/src/Gateway/js/modal.js' ),
+			array( 'jquery' ),
+			false,
+			true
+	    );
     }
 
     public function isTapTreeAvailable()
