@@ -95,7 +95,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // Todo move this if we have more methods than just the hosted checkout
         $this->method_title        = __('TapTree Checkout', 'woocommerce');
         $this->method_description  = __('Process payments climate-friendly and secure with TapTree\'s Hosted Checkout solution.', 'woocommerce');
-        $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.');
+        $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.');
 
         $this->init_form_fields();
         $this->init_settings();
@@ -117,7 +117,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
             if ($this->as_redirect === 'no') {
-                $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
+                $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
 
                 $this->initModal();
             }
@@ -811,9 +811,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         if (!$currentImpact) return $this->standardDescription;
 
         if ($this->as_redirect === 'no'){
-            return 'Mit diesen Zahlungsarten kostenlos zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.';
+            return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.';
         }
 
-        return 'Mit diesen Zahlungsarten kostenlos zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.';
+        return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.';
     }
 }
