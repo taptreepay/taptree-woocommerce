@@ -110,6 +110,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->as_redirect = $this->get_option('as_redirect');
 
 
+        $this->alt_title = $this->get_option('alt_title');
+
+
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
 
             //$this->logger->debug(__METHOD__ . " | " . $this->title . " | " . $this->id . " | " . $this->pluginId);
@@ -122,7 +125,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 $this->initModal();
             }
             
-            $this->title               = "ClimatePay"; //$this->getPaymentTitle();
+            $this->title               = $this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
             $this->initIcon();
@@ -291,6 +294,15 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $available_currencies = array('EUR');
 
         return in_array($current_currency, $available_currencies, true);
+    }
+
+    public function getPaymentTitle()
+    {
+        if($this->alt_title === 'yes'){
+            return 'ClimatePay';
+        }
+
+        return 'Kreditkarte und mehr';
     }
 
     protected function orderDoesNotExistFailure($order_id): array

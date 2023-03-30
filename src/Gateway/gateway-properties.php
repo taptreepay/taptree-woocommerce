@@ -22,6 +22,13 @@ return array(
         'description' => __('Insert your TapTree API key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Use test keys for test mode and use live keys for production only!', 'woocommerce'),
         //'desc_tip'      => true,
     ),
+    'alt_title' => array(
+        'title' => __('Title', 'woocommerce'),
+        'type' => 'checkbox',
+        'label' => __('Set title of payment method to "ClimatePay"', 'woocommerce'),
+        'description' => __( 'Check this option if you want to set the title of the payment method to "ClimatePay" instead of "Kreditkarte und mehr"', 'woocommerce' ),
+        'default' => 'no'
+    ),
     'as_redirect' => array(
         'title' => __('Popup', 'woocommerce'),
         'type' => 'checkbox',
