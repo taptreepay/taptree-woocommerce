@@ -116,14 +116,16 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
+            if ($this->as_redirect === 'no') {
+                $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
+
+                $this->initModal();
+            }
+            
             $this->title               = "ClimatePay"; //$this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
             $this->initIcon();
-
-            if ($this->as_redirect === 'no') {
-                $this->initModal();
-            }
 
             if (!has_action('woocommerce_thankyou_' . $this->id)) {
                 add_action(
@@ -807,6 +809,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         $currentImpact = $this->getImpact();
         if (!$currentImpact) return $this->standardDescription;
+
+        if ($this->as_redirect === 'no'){
+            return 'Mit diesen Zahlungsarten kostenlos zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.';
+        }
 
         return 'Mit diesen Zahlungsarten kostenlos zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.';
     }
