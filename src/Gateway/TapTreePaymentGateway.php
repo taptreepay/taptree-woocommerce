@@ -112,9 +112,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         $this->alt_title = $this->get_option('alt_title');
 
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
-
+            
             //$this->logger->debug(__METHOD__ . " | " . $this->title . " | " . $this->id . " | " . $this->pluginId);
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
