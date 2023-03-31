@@ -14,6 +14,7 @@ use TapTree\WooCommerce\Payment\PaymentService;
 use Psr\Log\LoggerInterface as Logger;
 use Psr\Log\LogLevel;
 use WC;
+use WC_Admin_Settings;
 use WC_Order;
 use WP_Error;
 use Exception;
@@ -120,6 +121,14 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
+            if ($this->api_key == 0 || strlen($this->api_key) === 0) {
+                WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
+                if($this->update_option('enabled', 'no')){
+                    do_action('woocommerce_update_option', array('enabled' => 'no'));
+                    $this->enabled = get_option('enabled');
+                }
+	        }
+
             if ($this->as_redirect === 'no') {
                 $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
 
@@ -150,6 +159,24 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         } else {
             $this->enabled = 'no';
         }
+    }
+
+    public function validate_api_key_field( $key, $value )
+    {
+	    if ($value == 0 || strlen($value) === 0) {
+            if ($this->update_option('enabled', 'no')) {
+                do_action('woocommerce_update_option', array('enabled' => 'no'));
+                $this->enabled = get_option('enabled');
+
+                WC_Admin_Settings::add_error('A valid API Key is required. TapTree Checkout has been disabled.');
+                return '';
+            }
+
+            WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
+        	return '';    	
+	    }
+
+	    return $value;
     }
 
     public function getReturnUrl($order, $returnUrl)

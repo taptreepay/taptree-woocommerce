@@ -7,7 +7,7 @@ return array(
         'title' => __('Enable/Disable', 'woocommerce'),
         'type' => 'checkbox',
         'label' => __('Enable TapTree Payments', 'woocommerce'),
-        'default' => 'yes'
+        'default' => 'no'
     ),
     /*'title' => array(
         'title' => __( 'Title', 'woocommerce' ),
