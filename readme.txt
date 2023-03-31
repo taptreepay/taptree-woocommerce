@@ -1,7 +1,7 @@
 === Plugin Name ===
 Requires at least: 4.7
 Tested up to: 5.4
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 Requires PHP: 7.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html

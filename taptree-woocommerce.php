@@ -4,7 +4,7 @@
  * Plugin Name:       TapTree Climate Payments for WooCommerce
  * Plugin URI:        https://taptree.org
  * Description:       Accept payments and protect the climate in WooCommerce with the official TapTree WooCommerce plugin
- * Version:           1.0.2
+ * Version:           1.1.0
  * Author:            TapTree
  * Author URI:        https://taptree.org/
  * Requires at least: 5.9
