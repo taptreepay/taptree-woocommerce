@@ -103,38 +103,32 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         // todo test if api_key is set
         $this->api_key = $this->get_option('api_key');
-
-
         $this->enabled = $this->get_option('enabled');
-
-        
         $this->as_redirect = $this->get_option('as_redirect');
-
-
         $this->alt_title = $this->get_option('alt_title');
 
-        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
-            
+
             //$this->logger->debug(__METHOD__ . " | " . $this->title . " | " . $this->id . " | " . $this->pluginId);
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
             if ($this->api_key == 0 || strlen($this->api_key) === 0) {
                 WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
-                if($this->update_option('enabled', 'no')){
+                if ($this->update_option('enabled', 'no')) {
                     do_action('woocommerce_update_option', array('enabled' => 'no'));
                     $this->enabled = get_option('enabled');
                 }
-	        }
+            }
 
             if ($this->as_redirect === 'no') {
                 $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
 
                 $this->initModal();
             }
-            
+
             $this->title               = $this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
@@ -152,8 +146,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 array($this, 'process_admin_options')
             );
 
-            // update impact after totals have been calculated
-            add_action('woocommerce_before_calculate_totals', array($this, 'voidCartImpact'), 10, 1);
+            add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
 
             add_action('woocommerce_api_' . $this->webhookSlug, array($this->paymentService, 'onPaymentGatewayWebhookCalled'));
         } else {
@@ -161,9 +154,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
-    public function validate_api_key_field( $key, $value )
+    public function validate_api_key_field($key, $value)
     {
-	    if ($value == 0 || strlen($value) === 0) {
+        if ($value == 0 || strlen($value) === 0) {
             if ($this->update_option('enabled', 'no')) {
                 do_action('woocommerce_update_option', array('enabled' => 'no'));
                 $this->enabled = get_option('enabled');
@@ -173,10 +166,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             }
 
             WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
-        	return '';    	
-	    }
+            return '';
+        }
 
-	    return $value;
+        return $value;
     }
 
     public function getReturnUrl($order, $returnUrl)
@@ -307,12 +300,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     public function initModal()
     {
         wp_enqueue_script(
-			'taptree-checkout-as-modal',
-			untrailingslashit( '/wp-content/plugins/taptree-woocommerce/src/Gateway/js/modal.js' ),
-			array( 'jquery' ),
-			false,
-			true
-	    );
+            'taptree-checkout-as-modal',
+            untrailingslashit('/wp-content/plugins/taptree-woocommerce/src/Gateway/js/modal.js'),
+            array('jquery'),
+            false,
+            true
+        );
     }
 
     public function isTapTreeAvailable()
@@ -326,7 +319,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public function getPaymentTitle()
     {
-        if($this->alt_title === 'yes'){
+        if ($this->alt_title === 'yes') {
             return 'ClimatePay';
         }
 
@@ -745,40 +738,66 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     }
 
 
-    // voiding the cart's impact
-    // this is just a little helper to make sure the impact api
-    // is only called initially and on cart updates
-    public function voidCartImpact($cart)
-    {
-        WC()->session->set(
-            'taptree_impact',
-            null
-        );
-    }
 
-    private function getCartTotal() {
-        if (!(WC() && WC()->cart))
+    function action_cart_calculate_totals($cart)
+    {
+        if (is_admin() && !wp_doing_ajax())
             return;
 
-        WC()->cart->get_cart();
-        //WC()->cart->calculate_totals();
+        if ($cart->is_empty())
+            return;
+
+        $cart->get_cart();
+        $this->logger->debug("");
+        $this->logger->debug("############# START CALCULATE IMPACT #############");
+        $total = $this->getCartTotal($cart);
+        $this->logger->debug(__METHOD__ . " | I received a total of  " . $total . " € to calculate the impact.");
+        $this->impact = WC()->session->get('taptree_impact');
+        if ($this->impact && (strcmp($this->impact->amount->value, $total) == 0)) {
+            $this->logger->debug(__METHOD__ . " | I have the same total of  " . $this->impact->amount->value . " € in the impact session–just skipping.");
+            return;
+        }
+        $this->logger->debug(__METHOD__ . " | I have a different total of  " . $this->impact->amount->value . " € in the impact session, so I need to calculate the impact again.");
+        // retrieve the impact from the API
+        $this->impact = $this->taptreeApi->get_impact_info($total, true);
+        $this->logger->debug(__METHOD__ . ":  " . json_encode($this->impact));
+        // store the impact in the session
+        WC()->session->set(
+            'taptree_impact',
+            $this->impact
+        );
+        // force a refresh of the title and description
+        //$this->title               = $this->getPaymentTitle();
+        //$this->description = $this->set_payment_description();
+        //WC()->session->set('reload_checkout ', 'true');
+
+        $this->logger->debug("############# END CALCULATE IMPACT #############");
+        $this->logger->debug("");
+    }
+
+    private function getCartTotal($cart)
+    {
+        if (!$cart)
+            return;
+
+        $cart->get_cart();
 
         try {
-            if (WC()->cart->total != 0 && preg_match('/^\d+[.]\d+$/', WC()->cart->total)) {
-                return floatval(WC()->cart->total);
-            }
+            $total = $cart->total;
+            if ($total != 0)
+                return $total;
 
             // some hacky way to get the total amount
             // we need this as the Germanized plugin set cart->total to 0
-            $total_str = preg_replace('#[^\d.,]#', '', WC()->cart->get_cart_total());
-        
+            $total_str = preg_replace('#[^\d.,]#', '', $cart->get_cart_total());
+
             if (preg_match('/^\d+[.]\d+$/', $total_str)) {
-	            return floatval($total_str);
+                return $total_str;
             }
 
-	        $split = preg_split( '/[.,]/', $total_str );
-	        $total = floatval(implode(array_slice($split, 0, -1, true)) . '.' . end($split));
-	        return $total;
+            $split = preg_split('/[.,]/', $total_str);
+            $total = implode(array_slice($split, 0, -1, true)) . '.' . end($split);
+            return $total;
         } catch (Exception $e) {
             return;
         }
@@ -786,71 +805,30 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     private function getImpact()
     {
-        // If we have no WC() object, we can't do anything
-
-        if (!(WC() && WC()->cart))
-            return;
-
-
-        // If we have an impact, return it
-        // We store it in the class instance and in the session
-        // Session will be voided on cart updates
-        if ($this->impact) return $this->impact;
-        if (WC()->session->get('taptree_impact')) return WC()->session->get('taptree_impact');
-
-        // Everything else is just for the payment page
-        // So only proceed if
-        // - we have a taptreeApi
-        // - it's a checkout page 
-        // - an ajax call
-        // - not an admin page
-        if (
-            !$this->taptreeApi ||
-            //!is_checkout() ||
-            !wp_doing_ajax() ||
-            is_admin()
-        ) {
-            return;
-        }
-
-        WC()->cart->get_cart();
-        //WC()->cart->calculate_totals();
-
-        $total = $this->getCartTotal();
-
-        // no total so just return
-        if ($total == 0)
-            return;
-
-
-        $this->impact = $this->taptreeApi->get_impact_info($total, true);
-        $this->logger->debug(__METHOD__ . ":  " . json_encode($this->impact));
-        WC()->session->set(
-            'taptree_impact',
-            $this->impact
-        );
+        $this->impact = WC()->session->get('taptree_impact');
         return $this->impact;
     }
 
     public function getImpactTitle()
     {
         $currentImpact = $this->getImpact();
+        $this->logger->debug(__METHOD__);
         if ($currentImpact) {
             return __($currentImpact->highest_possible_impact->value . ' ' . $currentImpact->highest_possible_impact->unit, 'taptree-payments-for-woocommerce');
         }
 
-        return __(null, 'taptree-payments-for-woocommerce'); //'TapTree ClimatePay'; // substr($logos, 0, -228);
+        return __(null, 'taptree-payments-for-woocommerce');
     }
 
     public function set_payment_description($description = "")
     {
         // If we have a description, use it
         if ($description != "") return $description;
-
         $currentImpact = $this->getImpact();
+        $this->logger->debug(__METHOD__);
         if (!$currentImpact) return $this->standardDescription;
 
-        if ($this->as_redirect === 'no'){
+        if ($this->as_redirect === 'no') {
             return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.';
         }
 
