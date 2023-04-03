@@ -141,11 +141,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
 
-            add_action(
-                'woocommerce_update_options_payment_gateways_' . $this->id,
-                array($this, 'process_admin_options')
-            );
-
             add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
 
             add_action('woocommerce_api_' . $this->webhookSlug, array($this->paymentService, 'onPaymentGatewayWebhookCalled'));
