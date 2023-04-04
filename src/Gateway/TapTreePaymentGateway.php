@@ -107,6 +107,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->as_redirect = $this->get_option('as_redirect');
         $this->alt_title = $this->get_option('alt_title');
 
+
+
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
@@ -115,8 +117,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
-            if ($this->api_key == 0 || strlen($this->api_key) === 0) {
-                WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
+            if (!$this->api_key || strlen($this->api_key) === 0) {
+                WC_Admin_Settings::add_error('A valid TapTree API key is required to enable TapTree Climate Pay Checkout.');
                 if ($this->update_option('enabled', 'no')) {
                     do_action('woocommerce_update_option', array('enabled' => 'no'));
                     $this->enabled = get_option('enabled');
@@ -129,7 +131,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 $this->initModal();
             }
 
-            $this->title               = $this->getPaymentTitle();
+            $this->title = $this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
             $this->initIcon();
@@ -149,9 +151,14 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
+    public function validate_enabled_field($key, $value)
+    {
+        $this->logger->debug(__METHOD__ . " | " . $key . " | " . $value);
+    }
+
     public function validate_api_key_field($key, $value)
     {
-        if ($value == 0 || strlen($value) === 0) {
+        if (!$value || strlen($value) === 0) {
             if ($this->update_option('enabled', 'no')) {
                 do_action('woocommerce_update_option', array('enabled' => 'no'));
                 $this->enabled = get_option('enabled');
@@ -746,13 +753,13 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->logger->debug("");
         $this->logger->debug("############# START CALCULATE IMPACT #############");
         $total = $this->getCartTotal($cart);
-        $this->logger->debug(__METHOD__ . " | I received a total of  " . $total . " € to calculate the impact.");
+        $this->logger->debug(__METHOD__ . " | I received a total of  " . $total . " € to calculate the impact.");
         $this->impact = WC()->session->get('taptree_impact');
-        if ($this->impact && (strcmp($this->impact->amount->value, $total) == 0)) {
-            $this->logger->debug(__METHOD__ . " | I have the same total of  " . $this->impact->amount->value . " € in the impact session–just skipping.");
+        if ($this->impact && (strcmp($this->impact->amount->value, $total) === 0)) {
+            $this->logger->debug(__METHOD__ . " | I have the same total of  " . $this->impact->amount->value . " € in the impact session-just skipping.");
             return;
         }
-        $this->logger->debug(__METHOD__ . " | I have a different total of  " . $this->impact->amount->value . " € in the impact session, so I need to calculate the impact again.");
+        $this->logger->debug(__METHOD__ . " | I have a different total of  " . $this->impact->amount->value . " € in the impact session, so I need to calculate the impact again.");
         // retrieve the impact from the API
         $this->impact = $this->taptreeApi->get_impact_info($total, true);
         $this->logger->debug(__METHOD__ . ":  " . json_encode($this->impact));
@@ -800,6 +807,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     private function getImpact()
     {
+        if (!WC() || !WC()->session) return null;
+
         $this->impact = WC()->session->get('taptree_impact');
         return $this->impact;
     }
@@ -807,7 +816,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     public function getImpactTitle()
     {
         $currentImpact = $this->getImpact();
-        $this->logger->debug(__METHOD__);
         if ($currentImpact) {
             return __($currentImpact->highest_possible_impact->value . ' ' . $currentImpact->highest_possible_impact->unit, 'taptree-payments-for-woocommerce');
         }
@@ -820,7 +828,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // If we have a description, use it
         if ($description != "") return $description;
         $currentImpact = $this->getImpact();
-        $this->logger->debug(__METHOD__);
         if (!$currentImpact) return $this->standardDescription;
 
         if ($this->as_redirect === 'no') {
