@@ -308,7 +308,7 @@ jQuery(function ($) {
         const top = screen.availTop + (screen.availHeight - height) / 2;
 
         taptreeModalHelper.modal = window.open(
-          "about:blank",
+          "https://checkout.taptree.org/lounge",
           "_blank",
           `popup, width=${width}, height=${height}, left=${left}, top=${top}`
         );
