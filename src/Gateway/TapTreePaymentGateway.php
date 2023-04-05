@@ -101,37 +101,42 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->init_form_fields();
         $this->init_settings();
 
-        // todo test if api_key is set
-        $this->api_key = $this->get_option('api_key');
-        $this->enabled = $this->get_option('enabled');
+        $this->live_mode = $this->get_option('live_mode');
+
+        if ($this->live_mode === 'yes' && $this->get_option('api_key_live') && strlen($this->get_option('api_key_live')) !== 0) {
+            $this->api_key = $this->get_option('api_key_live');
+        } else {
+            $this->api_key = $this->get_option('api_key_test');
+        }
+        
+        $this->enabled = $this->get_option('enabled');        
         $this->as_redirect = $this->get_option('as_redirect');
         $this->alt_title = $this->get_option('alt_title');
         $this->show_impact = $this->get_option('show_impact');
 
-
-
-        add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'validate_api_keys'));
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
-
+            
             //$this->logger->debug(__METHOD__ . " | " . $this->title . " | " . $this->id . " | " . $this->pluginId);
             $this->taptreeApi = new TapTreeApi($this);
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
             if (!$this->api_key || strlen($this->api_key) === 0) {
-                WC_Admin_Settings::add_error('A valid TapTree API key is required to enable TapTree Climate Pay Checkout.');
+                WC_Admin_Settings::add_error('At least one valid TapTree API key is required to enable TapTree ClimatePay Checkout.');
                 if ($this->update_option('enabled', 'no')) {
                     do_action('woocommerce_update_option', array('enabled' => 'no'));
                     $this->enabled = get_option('enabled');
                 }
-            }
+	        }
 
             if ($this->as_redirect === 'no') {
                 $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere ClimatePay Browserfenster geöffnet.');
 
                 $this->initModal();
             }
-
+            
             $this->title = $this->getPaymentTitle();
             $this->description = $this->set_payment_description();
 
@@ -154,22 +159,80 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
-    public function validate_api_key_field($key, $value)
+    public function validate_api_keys()
     {
-        if (!$value || strlen($value) === 0) {
+        $test_key = $this->get_option('api_key_test');
+        $live_key = $this->get_option('api_key_live');
+        $live_mode = $this->get_option('live_mode');
+        
+        if ((!$test_key || strlen($test_key) === 0) && (!$live_key || strlen($live_key) === 0)) {
             if ($this->update_option('enabled', 'no')) {
                 do_action('woocommerce_update_option', array('enabled' => 'no'));
                 $this->enabled = get_option('enabled');
-
-                WC_Admin_Settings::add_error('A valid API Key is required. TapTree Checkout has been disabled.');
-                return '';
+                
+                WC_Admin_Settings::add_error('At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
             }
-
-            WC_Admin_Settings::add_error('A valid API Key is required to enable TapTree Checkout.');
-            return '';
         }
 
-        return $value;
+        if ($live_mode === 'yes' && (!$live_key || strlen($live_key) === 0)) {
+            if ($this->update_option('live_mode', 'no')) {
+                do_action('woocommerce_update_option', array('live_mode' => 'no'));
+                $this->live_mode = get_option('live_mode');
+                
+                WC_Admin_Settings::add_error('A valid TapTree live API key is required for "live mode" to be enabled.');
+            }
+        }
+    }
+
+    public function generate_api_key_html($type, $props)
+    {
+        ob_start();
+
+        ?>
+            <tr valign="top">
+                <th scope="row" class="titledesc">
+				    <label for="taptree_wc_gateway_hosted_checkout_api_key"><?=$props['title']?></label>
+			    </th>
+                <td class="forminp">
+				    <fieldset>
+					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
+                        <div style="display:flex">
+                        <?php
+                            $apiKey = esc_attr(wp_unslash($this->get_option($type)));
+
+                            $mode_label = null;
+                            if (str_starts_with($apiKey, 'live_')) {
+                                $mode_label = 'LIVE';
+                            } elseif (str_starts_with($apiKey, 'test_')) {
+                                $mode_label = 'TEST';
+                            }
+                            
+                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $type . '" id="taptree_wc_gateway_hosted_checkout_' . $type . '" style="" value="' . $apiKey . '" placeholder="">';
+
+                            if ($mode_label) {
+                                echo '<div style="
+                                font-weight: 500;
+                                font-size: small;
+                                background-color: #ddd;
+                                border: none;
+                                color: black;
+                                padding: 3px 10px;
+                                text-align: center;
+                                text-decoration: none;
+                                display: flex;
+                                margin: auto 0 auto 10px;
+                                cursor: pointer;
+                                border-radius: 16px;"><span>' . $mode_label . '</span></div>';
+                            }
+                        ?>
+                        </div>
+					    <p class="description"><?=$props['description']?></p>
+				    </fieldset>
+			    </td>
+            </tr>
+        <?php
+
+        return ob_get_clean();
     }
 
     public function getReturnUrl($order, $returnUrl)
@@ -300,12 +363,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     public function initModal()
     {
         wp_enqueue_script(
-            'taptree-checkout-as-modal',
+			'taptree-checkout-as-modal',
             untrailingslashit('/wp-content/plugins/taptree-woocommerce/src/Gateway/js/modal.js'),
             array('jquery'),
-            false,
-            true
-        );
+			false,
+			true
+	    );
     }
 
     public function isTapTreeAvailable()
@@ -734,7 +797,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                     $this->paymentService->getPaymentMethodDetails($payment)
                 );
             }
-            
+
             return sprintf(
                 /* translators: Placeholder 1: payment method */
                 __(
@@ -801,14 +864,14 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             // some hacky way to get the total amount
             // we need this as the Germanized plugin set cart->total to 0
             $total_str = preg_replace('#[^\d.,]#', '', $cart->get_cart_total());
-
+        
             if (preg_match('/^\d+[.]\d+$/', $total_str)) {
                 return $total_str;
             }
 
             $split = preg_split('/[.,]/', $total_str);
             $total = implode(array_slice($split, 0, -1, true)) . '.' . end($split);
-            return $total;
+	        return $total;
         } catch (Exception $e) {
             return;
         }
