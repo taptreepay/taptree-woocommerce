@@ -9,19 +9,21 @@ class PaymentMethodImageBuilder
     public static function set_payment_images(TapTreePaymentGateway $gateway)
     {
         $impactElement = '';
-        $impact = $gateway->getImpactTitle();
-        if ($impact) {
-            $impactElement = '<div style="display:inline; font-weight: 500; font-size: smaller; background-color: #ddd;
-            border: none;
-            color: black;
-            padding: 3px 10px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 16px;">-' . str_replace(".", ",", $gateway->getImpactTitle()) . '</div>';
-        };
+        if ($gateway->get_option('show_impact') === 'yes') {
+            $impact = $gateway->getImpactTitle();
+            if ($impact) {
+                $impactElement = '<div style="display:inline; font-weight: 500; font-size: smaller; background-color: #ddd;
+                border: none;
+                color: black;
+                padding: 3px 10px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 16px;">-' . str_replace(".", ",", $gateway->getImpactTitle()) . '</div>';
+            }
+        }
 
         $logos = '';
         if ($gateway->get_option('applepay') === 'yes') {

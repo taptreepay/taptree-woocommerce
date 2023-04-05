@@ -106,6 +106,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->enabled = $this->get_option('enabled');
         $this->as_redirect = $this->get_option('as_redirect');
         $this->alt_title = $this->get_option('alt_title');
+        $this->show_impact = $this->get_option('show_impact');
 
 
 
@@ -143,7 +144,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
 
-            add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
+            if ($this->show_impact === 'yes') {
+                add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
+            }
 
             add_action('woocommerce_api_' . $this->webhookSlug, array($this->paymentService, 'onPaymentGatewayWebhookCalled'));
         } else {
@@ -726,10 +729,21 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
         } elseif ($payment->status === "authorized" || $payment->status === "paid") {
+            if ($this->show_impact === 'yes') {
+                return sprintf(
+                    /* translators: Placeholder 1: payment method */
+                    __(
+                        'Payment erfolgreich mit %s.<br/>Mit deiner Zahlung haben wir ' . str_replace(".", ",", $payment->impact->value) . ' ' . $payment->impact->unit . ' gebunden.',
+                        'taptree-payments-for-woocommerce'
+                    ),
+                    $this->paymentService->getPaymentMethodDetails($payment)
+                );
+            }
+            
             return sprintf(
                 /* translators: Placeholder 1: payment method */
                 __(
-                    'Payment erfolgreich mit %s.<br/>Mit deiner Zahlung haben wir ' . str_replace(".", ",", $payment->impact->value) . ' ' . $payment->impact->unit . ' gebunden.',
+                    'Payment erfolgreich mit %s.',
                     'taptree-payments-for-woocommerce'
                 ),
                 $this->paymentService->getPaymentMethodDetails($payment)
@@ -827,6 +841,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         // If we have a description, use it
         if ($description != "") return $description;
+        if ($this->show_impact === 'no') return $this->standardDescription;
         $currentImpact = $this->getImpact();
         if (!$currentImpact) return $this->standardDescription;
 
