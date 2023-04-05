@@ -154,11 +154,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
-    public function validate_enabled_field($key, $value)
-    {
-        $this->logger->debug(__METHOD__ . " | " . $key . " | " . $value);
-    }
-
     public function validate_api_key_field($key, $value)
     {
         if (!$value || strlen($value) === 0) {
