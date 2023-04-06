@@ -186,6 +186,7 @@ class TapTreeApi
     $response_raw = wp_safe_remote_post(
       'https://api.taptree.org/v1/impact',
       array(
+        'timeout' => 3, // don't block too long if there is an issue. should rarely happen because of HA
         'method' => 'POST',
         'data_format' => 'body',
         'headers' => array(
