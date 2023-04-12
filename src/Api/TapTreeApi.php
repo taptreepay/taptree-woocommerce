@@ -116,6 +116,26 @@ class TapTreeApi
   }
 
   /**
+   * @param string
+   * @return object
+   */
+  public function get_acceptor_data($token)
+  {
+    $response_raw = wp_safe_remote_get(
+      'https://api.taptree.org/v1/acceptor',
+      array(
+        'method' => 'GET',
+        'headers' => array(
+          'Content-Type' => 'application/json; charset=utf-8',
+          'Authorization' => 'Bearer ' . $token,
+        )
+      )
+    );
+
+    return $this->parse_response_safe($response_raw);
+  }
+
+  /**
    * Triggers the capture of the payment with the given transaction_id, which was authorized previously
    * 
    * @param string
