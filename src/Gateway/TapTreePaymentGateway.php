@@ -184,7 +184,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
-    public function generate_api_key_html($type, $props)
+    public function generate_api_key_html($key, $props)
     {
         ob_start();
 
@@ -198,7 +198,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
                         <div style="display:flex">
                         <?php
-                            $apiKey = esc_attr(wp_unslash($this->get_option($type)));
+                            $apiKey = esc_attr(wp_unslash($this->get_option($key)));
 
                             $mode_label = null;
                             if (str_starts_with($apiKey, 'live_')) {
@@ -207,7 +207,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 $mode_label = 'TEST';
                             }
                             
-                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $type . '" id="taptree_wc_gateway_hosted_checkout_' . $type . '" style="" value="' . $apiKey . '" placeholder="">';
+                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $key . '" id="taptree_wc_gateway_hosted_checkout_' . $key . '" style="" value="' . $apiKey . '" placeholder="">';
 
                             if ($mode_label) {
                                 echo '<div style="
