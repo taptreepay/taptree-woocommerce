@@ -98,6 +98,20 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->method_description  = __('Process payments climate-friendly and secure with TapTree\'s Hosted Checkout solution.', 'woocommerce');
         $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.');
 
+        $this->payment_methods_logo_labels = array(
+            'visa' => 'Visa',
+            'master' => 'Mastercard',
+            'amex' => 'American Express',
+            'jcb' => 'JCB',
+            'diners' => 'Diners Club',
+            'applepay' => 'Apple Pay',
+            'googlepay' => 'Google Pay',
+            'sofort' => 'Sofort',
+            'giropay' => 'giropay',
+            'paypal' => 'PayPal',
+            'klarna' => 'Klarna',
+        );
+
         $this->init_form_fields();
         $this->init_settings();
 
@@ -115,6 +129,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->show_impact = $this->get_option('show_impact');
 
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'save_payment_method_logos'));
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'validate_api_keys'));
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
@@ -161,18 +176,24 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->update_option('is_test_key_valid', null);
             $this->update_option('is_live_key_valid', null);
 
+            $this->update_option('available_payment_methods', null);
+
             return;
         }
 
         $test_key = $this->get_option('api_key_test');
         $live_key = $this->get_option('api_key_live');
         $live_mode = $this->get_option('live_mode');
+        
+        $old_available_payment_methods = $this->get_option('available_payment_methods');
 
         $is_test_key_valid = false;
         $is_live_key_valid = false;
 
         $test_key_acceptor_data = null;
         $live_key_acceptor_data = null;
+
+        $available_payment_methods = null;
 
         if (!$this->taptreeApi) {
             $this->taptreeApi = new TapTreeApi($this);
@@ -207,8 +228,25 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
 
         // Validate live mode
-        if ($live_mode === 'yes' && !$is_live_key_valid) {
-            $this->alterOption('live_mode', 'no', 'A valid TapTree live API key is required for "live mode" to be enabled.');
+        if ($live_mode === 'yes') {
+            if ($is_live_key_valid) {
+                $available_payment_methods = $live_key_acceptor_data->available_payment_methods;
+            } else {
+                if ($is_test_key_valid) {
+                    $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+                }
+                $this->alterOption('live_mode', 'no', 'A valid TapTree live API key is required for "live mode" to be enabled.');
+            }
+        } else {
+            if ($is_test_key_valid) {
+                $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+            } 
+        }
+        $this->update_option('available_payment_methods', $available_payment_methods);
+
+        // Initialize payment_method_logos
+        if ($available_payment_methods !== $old_available_payment_methods) {
+            $this->init_payment_method_logos($available_payment_methods);
         }
     }
 
@@ -238,6 +276,28 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             }
             
         }
+    }
+
+    private function init_payment_method_logos($available_payment_methods) {
+        $payment_method_logos = array();
+        foreach ($available_payment_methods as $method_id){
+            $payment_method_logos[$method_id] = 1;
+        }
+        
+        $this->update_option('payment_method_logos', $payment_method_logos);
+    }
+
+    public function save_payment_method_logos()
+    {
+        $payment_method_logos = array();
+        foreach ($this->payment_methods_logo_labels as $method_id => $label){
+            if (isset($_POST['taptree_wc_gateway_hosted_checkout_' . $method_id])) {
+                $payment_method_logos[$method_id] = $_POST['taptree_wc_gateway_hosted_checkout_' . $method_id];
+            }
+            
+        }
+        
+        $this->update_option('payment_method_logos', $payment_method_logos);
     }
 
     public function generate_api_key_html($key, $props)
@@ -304,6 +364,36 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             </tr>
         <?php
 
+        return ob_get_clean();
+    }
+
+    public function generate_payment_method_logos_html($key, $props)
+    {
+        ob_start();
+
+        ?>
+            <tr valign="top">
+                <th scope="row" class="titledesc">
+				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?=$props['title']?></label>
+			    </th>
+                <td class="forminp">
+				    <fieldset>
+					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
+					    <p class="description"><?=$props['description']?></p>
+                            <?php
+                                $available_payment_methods = $this->get_option('available_payment_methods');
+                                if (!$available_payment_methods) $available_payment_methods = array();
+                                $chosen_payment_logos = $this->get_option('payment_method_logos');
+                                if (!$chosen_payment_logos) $chosen_payment_logos = array();
+                                
+                                foreach ($available_payment_methods as $method_id) {
+                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . ($chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->payment_methods_logo_labels[$method_id] . '</label><br>';
+                                }
+                            ?>
+				    </fieldset>
+			    </td>
+            </tr>
+        <?php
         return ob_get_clean();
     }
 

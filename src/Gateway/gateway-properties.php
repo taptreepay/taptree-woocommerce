@@ -52,81 +52,10 @@ return array(
         'default' => 'yes',
         'desc_tip'      => true,
     ),
-    'visa' => array(
-        'title' => __('Visa', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Visa Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Visa logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'mastercard' => array(
-        'title' => __('Mastercard', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Mastercard Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Mastercard logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'amex' => array(
-        'title' => __('American Express', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display American Express Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display American Express logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'jcb' => array(
-        'title' => __('JCB', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display JCB Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display JCB logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'diners' => array(
-        'title' => __('Diners Club', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Diners Club Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Diners Club logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'applepay' => array(
-        'title' => __('Apple Pay', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Apple Pay Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Apple Pay logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'googlepay' => array(
-        'title' => __('Google Pay', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Google Pay Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Google Pay logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'sofort' => array(
-        'title' => __('Sofort', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Sofort Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Sofort logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'giropay' => array(
-        'title' => __('giropay', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display giropay Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display giropay logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'paypal' => array(
-        'title' => __('PayPal', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display PayPal Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display PayPal logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
-    ),
-    'klarna' => array(
-        'title' => __('Klarna', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display Klarna Logo', 'woocommerce'),
-        'description' => __( 'Decide whether to display Klarna logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
-        'default' => 'no'
+    'payment_method_logos' => array(
+        'title' => __('Payment Method Logos', 'woocommerce'),
+        'type' => 'payment_method_logos',
+        'label' => __('', 'woocommerce'),
+        'description' => __('Configure which payment method logos will be displayed on the checkout page. Only the methods available for your current api key settings are displayed here. If the payment methods available change for any reason (e.g. different api key settings or toggling the "Enabled" state) all available methods will be checked by default.', 'woocommerce'),
     ),
 );
