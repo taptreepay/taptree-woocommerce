@@ -9,26 +9,17 @@ return array(
         'label' => __('Enable TapTree Payments', 'woocommerce'),
         'default' => 'no'
     ),
-    /*'title' => array(
-        'title' => __( 'Title', 'woocommerce' ),
-        'type' => 'safe_text',
-        'description' => __( 'This controls the title which the user sees during checkout.', 'woocommerce' ),
-        'default' => __( 'TapTree', 'woocommerce' ),
-        'desc_tip'      => true,
-    ),*/
     'api_key_test' => array(
         'title' => __('Test API Key', 'woocommerce'),
         'type' => 'api_key',
         'input_type' => 'text',
         'description' => __('Insert your TapTree test API key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Only use test keys here!', 'woocommerce'),
-        //'desc_tip'      => true,
     ),
     'api_key_live' => array(
         'title' => __('Live API Key', 'woocommerce'),
         'type' => 'api_key',
         'input_type' => 'password',
         'description' => __('Attention: This key is used to process payments in live mode!', 'woocommerce'),
-        //'desc_tip'      => true,
     ),
     'live_mode' => array(
         'title' => __('Live Mode', 'woocommerce'),
@@ -138,15 +129,4 @@ return array(
         'description' => __( 'Decide whether to display Klarna logo during checkout. Attention: Only select the logo if your TapTree account is set up for this payment method!', 'woocommerce' ),
         'default' => 'no'
     ),
-    /*'more' => array(
-        'title' => __('And More', 'woocommerce'),
-        'type' => 'checkbox',
-        'label' => __('Display "And More" Logo', 'woocommerce'),
-        'default' => 'no'
-    )*/
-    /*'description' => array(
-        'title' => __( 'Customer Message', 'woocommerce' ),
-        'type' => 'textarea',
-        'default' => 'After enabling the TapTree Payment Gateway and providing an API key payments are securely be processed via the TapTrhosted checkout.'
-    )*/
 );
