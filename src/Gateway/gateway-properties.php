@@ -47,7 +47,7 @@ return array(
     'as_redirect' => array(
         'title' => __('Popup', 'woocommerce'),
         'type' => 'checkbox',
-        'label' => __('Checkout as Redirect', 'woocommerce'),
+        'label' => __('Checkout as redirect', 'woocommerce'),
         'description' => __( 'Check this option if you do not want to open the TapTree Checkout Popup but have your clients redirected instead.', 'woocommerce' ),
         'default' => 'no'
     ),
