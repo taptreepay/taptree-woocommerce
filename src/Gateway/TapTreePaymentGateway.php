@@ -296,11 +296,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     public function save_payment_method_logos()
     {
         $payment_method_logos = array();
-        foreach ($this->payment_methods_logo_labels as $method_id => $label){
+        $available_payment_methods = $this->get_option('available_payment_methods');
+        if (!$available_payment_methods) $available_payment_methods = array();
+        foreach ($available_payment_methods as $method_id){
             if (isset($_POST['taptree_wc_gateway_hosted_checkout_' . $method_id])) {
                 $payment_method_logos[$method_id] = $_POST['taptree_wc_gateway_hosted_checkout_' . $method_id];
             }
-            
         }
         
         $this->update_option('payment_method_logos', $payment_method_logos);
