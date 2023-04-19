@@ -12,7 +12,7 @@ return array(
     'api_key_test' => array(
         'title' => __('Test API Key', 'woocommerce'),
         'type' => 'api_key',
-        'input_type' => 'text',
+        'input_type' => 'password',
         'description' => __('Insert your TapTree API test key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Only use test keys here!', 'woocommerce'),
     ),
     'api_key_live' => array(
