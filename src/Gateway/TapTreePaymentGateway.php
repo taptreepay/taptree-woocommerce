@@ -195,7 +195,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
         $available_payment_methods = null;
 
-        if (!$this->taptreeApi) {
+        if (!isset($this->taptreeApi)) {
             $this->taptreeApi = new TapTreeApi($this);
         }
 
