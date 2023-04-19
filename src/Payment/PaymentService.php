@@ -163,7 +163,7 @@ class PaymentService
         }
     }
 
-    private function paymentBrandName($brandKey)
+    public function paymentBrandName($brandKey)
     {
         $brandNames = array(
             'visa' => 'Visa',
@@ -177,17 +177,20 @@ class PaymentService
             'paypal' => 'PayPal',
             'sofort' => 'Sofort',
             'giropay' => 'Giropay',
+            'applepay' => 'Apple Pay',
+            'googlepay' => 'Google Pay'
         );
         return $brandNames[$brandKey];
     }
 
     private function walletName($walletKey)
     {
-        $walletNames = array(
-            'applepay' => 'Apple Pay',
-            'googlepay' => 'Google Pay'
-        );
-        return $walletNames[$walletKey];
+        if ($walletKey === 'applepay' || $walletKey === 'googlepay') {
+            return $this->paymentBrandName($walletKey);
+        }
+
+        return;
+        
     }
 
     public function getPaymentMethodName($payment)
