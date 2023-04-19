@@ -115,6 +115,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->show_impact = $this->get_option('show_impact');
 
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'save_payment_method_logos'));
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'validate_api_keys'));
 
         if ($this->isTapTreeAvailable() && $this->enabled === 'yes') {
@@ -124,11 +125,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->paymentService->setGateway($this, $this->taptreeApi);
 
             if (!$this->api_key || strlen($this->api_key) === 0) {
-                WC_Admin_Settings::add_error('At least one valid TapTree API key is required to enable TapTree ClimatePay Checkout.');
-                if ($this->update_option('enabled', 'no')) {
-                    do_action('woocommerce_update_option', array('enabled' => 'no'));
-                    $this->enabled = get_option('enabled');
-                }
+                $this->alterOption('enabled', 'no', 'At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
 	        }
 
             if ($this->as_redirect === 'no') {
@@ -161,30 +158,142 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public function validate_api_keys()
     {
+        if ($this->get_option('enabled') !== 'yes'){
+            $this->update_option('is_test_key_valid', null);
+            $this->update_option('is_live_key_valid', null);
+
+            $this->update_option('available_payment_methods', null);
+
+            return;
+        }
+
         $test_key = $this->get_option('api_key_test');
         $live_key = $this->get_option('api_key_live');
         $live_mode = $this->get_option('live_mode');
         
-        if ((!$test_key || strlen($test_key) === 0) && (!$live_key || strlen($live_key) === 0)) {
-            if ($this->update_option('enabled', 'no')) {
-                do_action('woocommerce_update_option', array('enabled' => 'no'));
-                $this->enabled = get_option('enabled');
-                
-                WC_Admin_Settings::add_error('At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
+        $old_available_payment_methods = $this->get_option('available_payment_methods');
+
+        $is_test_key_valid = false;
+        $is_live_key_valid = false;
+
+        $test_key_acceptor_data = null;
+        $live_key_acceptor_data = null;
+
+        $available_payment_methods = null;
+
+        if (!isset($this->taptreeApi)) {
+            $this->taptreeApi = new TapTreeApi($this);
+        }
+
+        // Validate api keys
+        if ($test_key && strlen($test_key) !== 0) {
+            try {
+                $test_key_acceptor_data = $this->taptreeApi->get_acceptor_data($test_key);
+                $is_test_key_valid = $this->isApiKeyValid($test_key_acceptor_data, 'test');
+            } catch (Exception $e) {
+                $test_key_acceptor_data = array();
+                $is_test_key_valid = false;
             }
         }
 
-        if ($live_mode === 'yes' && (!$live_key || strlen($live_key) === 0)) {
-            if ($this->update_option('live_mode', 'no')) {
-                do_action('woocommerce_update_option', array('live_mode' => 'no'));
-                $this->live_mode = get_option('live_mode');
-                
-                WC_Admin_Settings::add_error('A valid TapTree live API key is required for "live mode" to be enabled.');
+        if ($live_key && strlen($live_key) !== 0) {
+            try {
+                $live_key_acceptor_data = $this->taptreeApi->get_acceptor_data($live_key);
+                $is_live_key_valid = $this->isApiKeyValid($live_key_acceptor_data, 'live');
+            } catch (Exception $e) {
+                $live_key_acceptor_data = array();
+                $is_live_key_valid = false;
             }
+        }
+
+        $this->update_option('is_test_key_valid', $is_test_key_valid);
+        $this->update_option('is_live_key_valid', $is_live_key_valid);
+
+        if (!$is_test_key_valid) { 
+            if (!$is_live_key_valid) {
+                $this->alterOption('enabled', 'no', 'At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
+            } else { 
+                if ($live_mode !== 'yes') {
+                    $this->alterOption('enabled', 'no', 'Live mode is disabled but no valid TapTree API test key is provided. TapTree Checkout has been disabled.');
+                }
+            }
+        }
+
+        // Validate live mode
+        if ($live_mode === 'yes') {
+            if ($is_live_key_valid) {
+                $available_payment_methods = $live_key_acceptor_data->available_payment_methods;
+            } else {
+                if ($is_test_key_valid) {
+                    $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+                }
+                $this->alterOption('live_mode', 'no', 'A valid TapTree API live key is required for "live mode" to be enabled.');
+            }
+        } else {
+            if ($is_test_key_valid) {
+                $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+            } 
+        }
+        $this->update_option('available_payment_methods', $available_payment_methods);
+
+        // Initialize payment_method_logos
+        if ($available_payment_methods !== $old_available_payment_methods) {
+            $this->init_payment_method_logos($available_payment_methods);
         }
     }
 
-    public function generate_api_key_html($type, $props)
+    private function isApiKeyValid($acceptorData, $keyType = 'test') {
+        if (!$acceptorData->id) {
+            return false;
+        }
+
+        if ($keyType === 'test' && $acceptorData->test_mode) {
+            return true;
+        }
+        
+        if ($keyType === 'live' && !$acceptorData->test_mode) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function alterOption($key, $value, $error_message = '') {
+        if ($this->update_option($key, $value)) {
+            do_action('woocommerce_update_option', array($key => $value));
+            $this->enabled = get_option($key);
+                
+            if ($error_message !== '') {
+                WC_Admin_Settings::add_error($error_message);
+            }
+            
+        }
+    }
+
+    private function init_payment_method_logos($available_payment_methods) {
+        $payment_method_logos = array();
+        foreach ($available_payment_methods as $method_id){
+            $payment_method_logos[$method_id] = 1;
+        }
+        
+        $this->update_option('payment_method_logos', $payment_method_logos);
+    }
+
+    public function save_payment_method_logos()
+    {
+        $payment_method_logos = array();
+        $available_payment_methods = $this->get_option('available_payment_methods');
+        if (!$available_payment_methods) $available_payment_methods = array();
+        foreach ($available_payment_methods as $method_id){
+            if (isset($_POST['taptree_wc_gateway_hosted_checkout_' . $method_id])) {
+                $payment_method_logos[$method_id] = $_POST['taptree_wc_gateway_hosted_checkout_' . $method_id];
+            }
+        }
+        
+        $this->update_option('payment_method_logos', $payment_method_logos);
+    }
+
+    public function generate_api_key_html($key, $props)
     {
         ob_start();
 
@@ -198,31 +307,47 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
                         <div style="display:flex">
                         <?php
-                            $apiKey = esc_attr(wp_unslash($this->get_option($type)));
+                            $apiKey = esc_attr(wp_unslash($this->get_option($key)));
+                            
+                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $key . '" id="taptree_wc_gateway_hosted_checkout_' . $key . '" style="" value="' . $apiKey . '" placeholder="">';
 
-                            $mode_label = null;
-                            if (str_starts_with($apiKey, 'live_')) {
-                                $mode_label = 'LIVE';
-                            } elseif (str_starts_with($apiKey, 'test_')) {
-                                $mode_label = 'TEST';
+                            $verified_indicator = '<svg  style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" viewBox="0 -8 9 14" width="11px" height="17px"><path fill="white" d="m0 0 3 3 6-6-1-1-5 5-2-2-1 1" /></svg>';
+                            $invalid_indicator = '<svg  style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" viewBox="0 -10 7 14" width="8.5" height="17px"><path fill="white" d="m0 0 1 1 6-6-1-1-6 6m0-5 6 6 1-1-6-6-1 1" /></svg>';
+
+                            
+                            $is_key_valid = null;
+                            if ($key === 'api_key_test') {
+                                $is_key_valid = $this->get_option('is_test_key_valid');
+                            } elseif ($key === 'api_key_live') {
+                                $is_key_valid = $this->get_option('is_live_key_valid');
                             }
                             
-                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $type . '" id="taptree_wc_gateway_hosted_checkout_' . $type . '" style="" value="' . $apiKey . '" placeholder="">';
+                            $color = '#ddd';
+                            $validity_indicator = '';
+                            $validity_label = '';
+                            if ($is_key_valid === true) {
+                                $color = '#00a32a';
+                                $validity_indicator = $verified_indicator;
+                                $validity_label = "verified";
+                            } elseif ($apiKey && strlen($apiKey) !== 0 && $is_key_valid === false) {
+                                $color = '#d63638';
+                                $validity_indicator = $invalid_indicator;
+                                $validity_label = "invalid";
+                            }
 
-                            if ($mode_label) {
+                            if ($validity_label) {
                                 echo '<div style="
                                 font-weight: 500;
                                 font-size: small;
-                                background-color: #ddd;
+                                background-color: ' . $color . ';
                                 border: none;
-                                color: black;
+                                color: white;
                                 padding: 3px 10px;
                                 text-align: center;
                                 text-decoration: none;
                                 display: flex;
                                 margin: auto 0 auto 10px;
-                                cursor: pointer;
-                                border-radius: 16px;"><span>' . $mode_label . '</span></div>';
+                                border-radius: 16px;">' . $validity_indicator . '<span>' . $validity_label . '</span></div>';
                             }
                         ?>
                         </div>
@@ -232,6 +357,36 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             </tr>
         <?php
 
+        return ob_get_clean();
+    }
+
+    public function generate_payment_method_logos_html($key, $props)
+    {
+        ob_start();
+
+        ?>
+            <tr valign="top">
+                <th scope="row" class="titledesc">
+				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?=$props['title']?></label>
+			    </th>
+                <td class="forminp">
+				    <fieldset>
+					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
+					    <p class="description"><?=$props['description']?></p>
+                            <?php
+                                $available_payment_methods = $this->get_option('available_payment_methods');
+                                if (!$available_payment_methods) $available_payment_methods = array();
+                                $chosen_payment_logos = $this->get_option('payment_method_logos');
+                                if (!$chosen_payment_logos) $chosen_payment_logos = array();
+                                
+                                foreach ($available_payment_methods as $method_id) {
+                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->paymentService->paymentBrandName($method_id) . '</label><br>';
+                                }
+                            ?>
+				    </fieldset>
+			    </td>
+            </tr>
+        <?php
         return ob_get_clean();
     }
 
