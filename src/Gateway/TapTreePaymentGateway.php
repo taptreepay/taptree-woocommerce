@@ -224,7 +224,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->update_option('is_live_key_valid', $is_live_key_valid);
 
         if (!$is_test_key_valid && !$is_live_key_valid) {
-            $this->alterOption('enabled', 'no', 'At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
+                $this->alterOption('enabled', 'no', 'At least one valid TapTree API key is required. TapTree Checkout has been disabled.');
         }
 
         // Validate live mode
@@ -235,7 +235,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 if ($is_test_key_valid) {
                     $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
                 }
-                $this->alterOption('live_mode', 'no', 'A valid TapTree live API key is required for "live mode" to be enabled.');
+                $this->alterOption('live_mode', 'no', 'A valid TapTree API live key is required for "live mode" to be enabled.');
             }
         } else {
             if ($is_test_key_valid) {
