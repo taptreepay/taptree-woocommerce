@@ -98,20 +98,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->method_description  = __('Process payments climate-friendly and secure with TapTree\'s Hosted Checkout solution.', 'woocommerce');
         $this->standardDescription = __('Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum ClimatePay Formular.');
 
-        $this->payment_methods_logo_labels = array(
-            'visa' => 'Visa',
-            'master' => 'Mastercard',
-            'amex' => 'American Express',
-            'jcb' => 'JCB',
-            'diners' => 'Diners Club',
-            'applepay' => 'Apple Pay',
-            'googlepay' => 'Google Pay',
-            'sofort' => 'Sofort',
-            'giropay' => 'giropay',
-            'paypal' => 'PayPal',
-            'klarna' => 'Klarna',
-        );
-
         $this->init_form_fields();
         $this->init_settings();
 
@@ -394,7 +380,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 if (!$chosen_payment_logos) $chosen_payment_logos = array();
                                 
                                 foreach ($available_payment_methods as $method_id) {
-                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->payment_methods_logo_labels[$method_id] . '</label><br>';
+                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->paymentService->paymentBrandName($method_id) . '</label><br>';
                                 }
                             ?>
 				    </fieldset>
