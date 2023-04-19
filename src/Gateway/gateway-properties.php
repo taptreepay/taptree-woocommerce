@@ -13,7 +13,7 @@ return array(
         'title' => __('Test API Key', 'woocommerce'),
         'type' => 'api_key',
         'input_type' => 'text',
-        'description' => __('Insert your TapTree test API key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Only use test keys here!', 'woocommerce'),
+        'description' => __('Insert your TapTree API test key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Only use test keys here!', 'woocommerce'),
     ),
     'api_key_live' => array(
         'title' => __('Live API Key', 'woocommerce'),
@@ -25,7 +25,7 @@ return array(
         'title' => __('Live Mode', 'woocommerce'),
         'type' => 'checkbox',
         'label' => __('Live mode', 'woocommerce'),
-        'description' => __( 'Check this option for live mode. Attention: Payments are only processed if this option is checked and a valid TapTree live API key is provided. Uncheck the option for testing, free of charge.', 'woocommerce' ),
+        'description' => __( 'Check this option for live mode. Attention: Payments are only processed if this option is checked and a valid TapTree API live key is provided. Uncheck the option for testing, free of charge.', 'woocommerce' ),
         'default' => 'no'
     ),
     'alt_title' => array(
