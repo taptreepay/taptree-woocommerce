@@ -393,7 +393,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 if (!$chosen_payment_logos) $chosen_payment_logos = array();
                                 
                                 foreach ($available_payment_methods as $method_id) {
-                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . ($chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->payment_methods_logo_labels[$method_id] . '</label><br>';
+                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->payment_methods_logo_labels[$method_id] . '</label><br>';
                                 }
                             ?>
 				    </fieldset>
