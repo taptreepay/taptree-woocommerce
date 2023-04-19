@@ -977,31 +977,23 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             return;
 
         $cart->get_cart();
-        $this->logger->debug("");
-        $this->logger->debug("############# START CALCULATE IMPACT #############");
         $total = $this->getCartTotal($cart);
-        $this->logger->debug(__METHOD__ . " | I received a total of  " . $total . " € to calculate the impact.");
         $this->impact = WC()->session->get('taptree_impact');
         if ($this->impact && (strcmp($this->impact->amount->value, $total) === 0)) {
-            $this->logger->debug(__METHOD__ . " | I have the same total of  " . $this->impact->amount->value . " € in the impact session-just skipping.");
             return;
         }
-        $this->logger->debug(__METHOD__ . " | I have a different total of  " . $this->impact->amount->value . " € in the impact session, so I need to calculate the impact again.");
         // retrieve the impact from the API
         $this->impact = $this->taptreeApi->get_impact_info($total, true);
-        $this->logger->debug(__METHOD__ . ":  " . json_encode($this->impact));
         // store the impact in the session
         WC()->session->set(
             'taptree_impact',
             $this->impact
         );
+        $this->logger->debug(__METHOD__ . " | new impact:  " . json_encode($this->impact));
         // force a refresh of the title and description
         //$this->title               = $this->getPaymentTitle();
         //$this->description = $this->set_payment_description();
         //WC()->session->set('reload_checkout ', 'true');
-
-        $this->logger->debug("############# END CALCULATE IMPACT #############");
-        $this->logger->debug("");
     }
 
     private function getCartTotal($cart)
