@@ -54,11 +54,11 @@ jQuery(function ($) {
     modalInterval: null,
     modalTimeout: null,
     blocker:
-      '<div id="taptree-blocker" style="z-index: 1001; position: fixed; height: 100%; width: 100%; top: 0; left: 0; background-color: #000; opacity: 0.75;"><div id="taptree-blocker-textbox" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"><p id="taptree-blocker-text" style="max-width: 350px; text-align: center; color: #fff">Wir öffnen das sicher ClimatePay Browserfenster für dich. Einen Moment bitte ...</p></div></div>',
+      '<div id="taptree-blocker" style="z-index: 1001; position: fixed; height: 100%; width: 100%; top: 0; left: 0; background-color: #000; opacity: 0.75;"><div id="taptree-blocker-textbox" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);"><p id="taptree-blocker-text" style="max-width: 350px; text-align: center; color: #fff">Wir öffnen das sicher TapTree Payments Browserfenster für dich. Einen Moment bitte ...</p></div></div>',
 
     updateBlockerWhenModalReady: () => {
       const modalReadyBlockerText =
-        "Du kannst das sichere ClimatePay Browserfenster nicht sehen? Klicke hier um das Fenster anzuzeigen und deinen Kauf abzuschließen";
+        "Du kannst das sichere TapTree Payments Browserfenster nicht sehen? Klicke hier um das Fenster anzuzeigen und deinen Kauf abzuschließen";
       Q("#taptree-blocker-text").setText(modalReadyBlockerText);
 
       const continueParagraph =
@@ -144,7 +144,7 @@ jQuery(function ($) {
     alertIfModalNotFocused: () => {
       if (!taptreeModalHelper.modalFocused) {
         window.alert(
-          "Bitte wechsle den Browsertab um die ClimatePay Zahlung abzuschließen"
+          "Bitte wechsle den Browsertab um die TapTree Payments Zahlung abzuschließen"
         );
       }
       window.removeEventListener("blur", taptreeModalHelper.setModalFocused);

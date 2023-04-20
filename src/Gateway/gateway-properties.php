@@ -31,8 +31,8 @@ return array(
     'alt_title' => array(
         'title' => __('Title', 'woocommerce'),
         'type' => 'checkbox',
-        'label' => __('Set title of payment method to "ClimatePay"', 'woocommerce'),
-        'description' => __( 'Check this option if you want to set the title of the payment method to "ClimatePay" instead of "Kreditkarte und mehr"', 'woocommerce' ),
+        'label' => __('Set title of payment method to "TapTree Payments"', 'woocommerce'),
+        'description' => __( 'Check this option if you want to set the title of the payment method to "TapTree Payments" instead of "Kreditkarte und mehr"', 'woocommerce' ),
         'default' => 'no',
         'desc_tip'      => true,
     ),
