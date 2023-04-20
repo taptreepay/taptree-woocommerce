@@ -1,6 +1,6 @@
 {
   "name": "taptreepay/taptree-woocommerce",
-  "description": "Taptree Climate Payments for WooCommerce",
+  "description": "TapTree Payments for WooCommerce",
   "type": "wordpress-plugin",
   "license": "GPL-3.0-or-later",
   "minimum-stability": "dev",

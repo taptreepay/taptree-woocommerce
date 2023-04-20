@@ -1,4 +1,4 @@
-# TapTree ClimatePay for Woocommerce
+# TapTree Payments for WooCommerce
 
 Quickly integrate the best payment for sustainable shopping experiences. With TapTree you link all important payment methods with climate protection, enrich your customer journey with social and ecological content and increase your perception as a sustainability pioneer.
 
