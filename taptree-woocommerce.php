@@ -111,5 +111,21 @@ function register_assets()
     wp_register_style('taptree-style-overrides', plugins_url('/public/css/taptree-style-overrides.min.css', __FILE__), false, '1.0.0', 'all');
 }
 
+function settings_link($links)
+{
+    $link = esc_url(add_query_arg(array(
+            'page' => 'wc-settings',
+            'tab' => 'checkout',
+            'section' => 'taptree_wc_gateway_hosted_checkout'
+        ), get_admin_url() . 'admin.php'));
+
+    $link_html = '<a href="' . $link . '">' . __('Settings') . '</a>';
+
+    array_unshift($links, $link_html);
+    
+    return $links;
+}
+
 add_action('plugins_loaded', __NAMESPACE__ . '\initialize');
 add_action('init', __NAMESPACE__ . '\register_assets');
+add_filter('plugin_action_links_taptree-woocommerce/taptree-woocommerce.php', __NAMESPACE__ . '\settings_link');
