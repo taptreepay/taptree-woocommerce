@@ -128,4 +128,4 @@ function settings_link($links)
 
 add_action('plugins_loaded', __NAMESPACE__ . '\initialize');
 add_action('init', __NAMESPACE__ . '\register_assets');
-add_filter('plugin_action_links_taptree-woocommerce/taptree-woocommerce.php', __NAMESPACE__ . '\settings_link');
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), __NAMESPACE__ . '\settings_link');
