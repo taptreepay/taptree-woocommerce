@@ -11,8 +11,6 @@ Credit and debit cards (depending on the selected acquirer):
 - VISA
 - MasterCard
 - American Express
-- V Pay
-- Maestro
 
 International and local payment methods:
 
