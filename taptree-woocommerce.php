@@ -111,7 +111,7 @@ function register_assets()
     wp_register_style('taptree-style-overrides', plugins_url('/public/css/taptree-style-overrides.min.css', __FILE__), false, '1.0.0', 'all');
 }
 
-function settings_link($links)
+function add_settings_link($links)
 {
     $link = esc_url(add_query_arg(array(
             'page' => 'wc-settings',
@@ -128,4 +128,4 @@ function settings_link($links)
 
 add_action('plugins_loaded', __NAMESPACE__ . '\initialize');
 add_action('init', __NAMESPACE__ . '\register_assets');
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), __NAMESPACE__ . '\settings_link');
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), __NAMESPACE__ . '\add_settings_link');
