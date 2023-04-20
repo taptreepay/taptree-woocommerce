@@ -735,7 +735,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
             $order->add_order_note(sprintf(
                 /* translators: Placeholder 1: currency, placeholder 2: refunded amount, placeholder 3: optional refund reason, placeholder 4: payment ID, placeholder 5: refund ID */
-                __('Refunded %1$s %2$s %3$s - Payment: %4$s, Refund: %5$s', 'TapTree-payments-for-woocommerce'),
+                __('Refunded %1$s %2$s %3$s - Payment: %4$s, Refund: %5$s', 'taptree-payments-for-woocommerce'),
                 $amount,
                 'EUR',
                 (!empty($reason) ? ' (reason: ' . $reason . ')' : ''),
