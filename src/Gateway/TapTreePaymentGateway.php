@@ -530,7 +530,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         // TODO: we support more currencies than EUR!
         $current_currency = get_woocommerce_currency();
-        $available_currencies = array('EUR');
+        $available_currencies = array('EUR', 'CHF');
 
         return in_array($current_currency, $available_currencies, true);
     }
