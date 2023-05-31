@@ -21,6 +21,8 @@ use Exception;
 use InvalidArgumentException;
 use UnexpectedValueException;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class TapTreePaymentGateway extends WC_Payment_Gateway
 {
 

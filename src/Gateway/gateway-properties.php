@@ -1,6 +1,6 @@
 <?php
 
-defined('ABSPATH') || exit;
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 return array(
     'enabled' => array(

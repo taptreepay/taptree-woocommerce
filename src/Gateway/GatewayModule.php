@@ -19,6 +19,8 @@ use Psr\Log\LoggerInterface as Logger;
 use WC_Order;
 use RuntimeException;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class GatewayModule implements ServiceModule, ExecutableModule
 {
     use ModuleClassNameIdTrait;

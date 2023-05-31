@@ -12,7 +12,7 @@ use WC_Order;
 use Throwable;
 use WP_Error;
 
-defined('ABSPATH') || exit;
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class PaymentService
 {

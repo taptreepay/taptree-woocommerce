@@ -12,6 +12,8 @@ use Inpsyde\Modularity\Module\ServiceModule;
 use TapTree\WooCommerce\SDK\HttpResponse;
 use Psr\Container\ContainerInterface;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class SDKModule implements ExecutableModule, ServiceModule
 {
     use ModuleClassNameIdTrait;

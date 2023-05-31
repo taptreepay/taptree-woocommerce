@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Gateway;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class PaymentMethodImageBuilder
 {
     public static function set_payment_images(TapTreePaymentGateway $gateway)

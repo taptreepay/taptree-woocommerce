@@ -9,6 +9,8 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerTrait;
 use Psr\Log\LogLevel;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class WcPsrLoggerAdapter extends AbstractLogger
 {
     use LoggerTrait;

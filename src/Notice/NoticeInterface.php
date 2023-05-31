@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Notice;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 /**
  * Interface NoticeInterface
  *

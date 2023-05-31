@@ -6,7 +6,7 @@ use Exception;
 use TapTree\WooCommerce\Gateway\TapTreePaymentGateway;
 use WP_Error;
 
-defined('ABSPATH') || exit;
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class TapTreeApi
 {
