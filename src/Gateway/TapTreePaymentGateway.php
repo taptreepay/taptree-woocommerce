@@ -302,11 +302,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         ?>
             <tr valign="top">
                 <th scope="row" class="titledesc">
-				    <label for="taptree_wc_gateway_hosted_checkout_api_key"><?=$props['title']?></label>
+				    <label for="taptree_wc_gateway_hosted_checkout_api_key"><?php echo $props['title']?></label>
 			    </th>
                 <td class="forminp">
 				    <fieldset>
-					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
+					    <legend class="screen-reader-text"><span><?php echo $props['title']?></span></legend>
                         <div style="display:flex">
                         <?php
                             $apiKey = esc_attr(wp_unslash($this->get_option($key)));
@@ -353,7 +353,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                             }
                         ?>
                         </div>
-					    <p class="description"><?=$props['description']?></p>
+					    <p class="description"><?php echo $props['description']?></p>
 				    </fieldset>
 			    </td>
             </tr>
@@ -369,12 +369,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         ?>
             <tr valign="top">
                 <th scope="row" class="titledesc">
-				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?=$props['title']?></label>
+				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?php echo $props['title']?></label>
 			    </th>
                 <td class="forminp">
 				    <fieldset>
-					    <legend class="screen-reader-text"><span><?=$props['title']?></span></legend>
-					    <p class="description"><?=$props['description']?></p>
+					    <legend class="screen-reader-text"><span><?php echo $props['title']?></span></legend>
+					    <p class="description"><?php echo $props['description']?></p>
                             <?php
                                 $available_payment_methods = $this->get_option('available_payment_methods');
                                 if (!$available_payment_methods) $available_payment_methods = array();
