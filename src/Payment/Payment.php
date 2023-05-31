@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Payment;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class Payment
 {
   protected $pluginId;

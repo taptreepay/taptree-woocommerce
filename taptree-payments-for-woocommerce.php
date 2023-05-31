@@ -27,7 +27,7 @@ use TapTree\WooCommerce\Shared\SharedModule;
 use TapTree\WooCommerce\SDK\SDKModule;
 use Throwable;
 
-defined('ABSPATH') || exit;
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 //$is_wc_version_greater_than_6_6 = defined( WC_VERSION ) && version_compare( WC_VERSION, '6.6', '>=' );
 require_once(ABSPATH . 'wp-admin/includes/plugin.php');

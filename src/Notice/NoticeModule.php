@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Notice;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 use Inpsyde\Modularity\Module\ModuleClassNameIdTrait;
 use Inpsyde\Modularity\Module\ServiceModule;
 use TapTree\WooCommerce\Notice\AdminNotice;

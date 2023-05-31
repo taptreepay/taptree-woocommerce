@@ -10,6 +10,8 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface as Logger;
 use Psr\Log\NullLogger;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class LogModule implements ServiceModule
 {
     use ModuleClassNameIdTrait;

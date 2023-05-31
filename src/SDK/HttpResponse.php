@@ -2,6 +2,8 @@
 declare(strict_types=1);
 namespace TapTree\WooCommerce\SDK;
 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 class HttpResponse
 {
     public function setHttpResponseCode($statusCode): void

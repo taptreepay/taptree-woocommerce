@@ -1,4 +1,6 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 if (!function_exists('has_block')) {
     /**
      * Check if the current page has block
