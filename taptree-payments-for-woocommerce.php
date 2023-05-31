@@ -79,7 +79,7 @@ function initialize()
         require_once __DIR__ . '/include/functions.php';
         require_once __DIR__ . '/vendor/autoload.php';
 
-        $woo_plugin_path = trailingslashit(WP_PLUGIN_DIR) . 'woocommerce/woocommerce.php';
+        $woo_plugin_path = WC_PLUGIN_FILE;
         // Test to see if WooCommerce is active (including network activated).
         if (
             !(in_array($woo_plugin_path, wp_get_active_and_valid_plugins())
