@@ -521,7 +521,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         wp_enqueue_script(
 			'taptree-checkout-as-modal',
-            untrailingslashit('/wp-content/plugins/' . dirname(plugin_basename(__FILE__)) . '/js/modal.js'),
+            plugins_url('js/modal.js', __FILE__),
             array('jquery'),
 			false,
 			true
