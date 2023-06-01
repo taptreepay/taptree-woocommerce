@@ -7,7 +7,7 @@
  * Version:           1.2.2
  * Author:            TapTree
  * Author URI:        https://taptree.org/
- * Requires at least: 5.9
+ * Requires at least: 6.0
  * Text Domain:       taptree-payments-for-woocommerce
  * License:           GPLv3 or later
  * WC requires at least: 7.0
