@@ -288,7 +288,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         if (!$available_payment_methods) $available_payment_methods = array();
         foreach ($available_payment_methods as $method_id){
             if (isset($_POST['taptree_wc_gateway_hosted_checkout_' . $method_id])) {
-                $payment_method_logos[$method_id] = $_POST['taptree_wc_gateway_hosted_checkout_' . $method_id];
+                $payment_method_logos[$method_id] = intval($_POST['taptree_wc_gateway_hosted_checkout_' . $method_id]);
             }
         }
         
