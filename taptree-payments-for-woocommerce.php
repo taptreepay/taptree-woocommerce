@@ -113,13 +113,13 @@ function register_assets()
 
 function add_settings_link($links)
 {
-    $link = esc_url(add_query_arg(array(
+    $link = add_query_arg(array(
             'page' => 'wc-settings',
             'tab' => 'checkout',
             'section' => 'taptree_wc_gateway_hosted_checkout'
-        ), get_admin_url() . 'admin.php'));
+        ), get_admin_url() . 'admin.php');
 
-    $link_html = '<a href="' . $link . '">' . __('Settings') . '</a>';
+    $link_html = '<a href="' . esc_url($link) . '">' . __('Settings') . '</a>';
 
     array_unshift($links, $link_html);
     

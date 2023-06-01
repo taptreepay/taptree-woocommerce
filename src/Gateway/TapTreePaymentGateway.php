@@ -447,7 +447,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             ],
             $webhook_url
         );
-        return $webhook_url;
+        return esc_url_raw($webhook_url);
     }
 
     /**
