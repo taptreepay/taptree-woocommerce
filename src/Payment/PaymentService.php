@@ -60,8 +60,13 @@ class PaymentService
         try {
             // simply decode the json data from the request
             $json_data = json_decode(file_get_contents('php://input'), true);
+            $get_data = array();
+            foreach ($_GET as $key => $value) {
+                $get_data[$key] = sanitize_text_field($value);
+            }
+
             $this->logger->debug(__METHOD__ . ":  " . json_encode($json_data));
-            $this->logger->debug(__METHOD__ . ":  " . json_encode($_GET));
+            $this->logger->debug(__METHOD__ . ":  " . json_encode($get_data));
 
             // Webhook test by TapTree
             if (isset($json_data['testedByTapTree'])) {
@@ -70,7 +75,7 @@ class PaymentService
                 return;
             }
 
-            if (empty($_GET['order_id']) || empty($_GET['key'])) {
+            if (empty($get_data['order_id']) || empty($get_data['key'])) {
                 $this->httpResponse->setHttpResponseCode(400);
                 $this->logger->debug(__METHOD__ . ":  No order ID or order key provided.");
                 return;
@@ -83,8 +88,8 @@ class PaymentService
                 return;
             }
 
-            $order_id = sanitize_text_field($_GET['order_id']);
-            $key = sanitize_text_field($_GET['key']);
+            $order_id = $get_data['order_id'];
+            $key = $get_data['key'];
             $order = wc_get_order($order_id);
 
             if (!$order) {
