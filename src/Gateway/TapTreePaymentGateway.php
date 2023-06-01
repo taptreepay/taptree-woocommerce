@@ -302,16 +302,16 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         ?>
             <tr valign="top">
                 <th scope="row" class="titledesc">
-				    <label for="taptree_wc_gateway_hosted_checkout_api_key"><?php echo $props['title']?></label>
+				    <label for="taptree_wc_gateway_hosted_checkout_api_key"><?php echo esc_html($props['title']);?></label>
 			    </th>
                 <td class="forminp">
 				    <fieldset>
-					    <legend class="screen-reader-text"><span><?php echo $props['title']?></span></legend>
+					    <legend class="screen-reader-text"><span><?php echo esc_html($props['title']);?></span></legend>
                         <div style="display:flex">
                         <?php
-                            $apiKey = esc_attr(wp_unslash($this->get_option($key)));
+                            $apiKey = wp_unslash($this->get_option($key));
                             
-                            echo '<input class="input-text regular-input " type="' . $props['input_type'] . '" name="taptree_wc_gateway_hosted_checkout_' . $key . '" id="taptree_wc_gateway_hosted_checkout_' . $key . '" style="" value="' . $apiKey . '" placeholder="">';
+                            echo '<input class="input-text regular-input " type="' . esc_attr($props['input_type']) . '" name="taptree_wc_gateway_hosted_checkout_' . esc_attr($key) . '" id="taptree_wc_gateway_hosted_checkout_' . esc_attr($key) . '" style="" value="' . esc_attr($apiKey) . '" placeholder="">';
 
                             $verified_indicator = '<svg  style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" viewBox="0 -8 9 14" width="11px" height="17px"><path fill="white" d="m0 0 3 3 6-6-1-1-5 5-2-2-1 1" /></svg>';
                             $invalid_indicator = '<svg  style="margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true" viewBox="0 -10 7 14" width="8.5" height="17px"><path fill="white" d="m0 0 1 1 6-6-1-1-6 6m0-5 6 6 1-1-6-6-1 1" /></svg>';
@@ -341,7 +341,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 echo '<div style="
                                 font-weight: 500;
                                 font-size: small;
-                                background-color: ' . $color . ';
+                                background-color: ' . esc_attr($color) . ';
                                 border: none;
                                 color: white;
                                 padding: 3px 10px;
@@ -349,11 +349,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 text-decoration: none;
                                 display: flex;
                                 margin: auto 0 auto 10px;
-                                border-radius: 16px;">' . $validity_indicator . '<span>' . $validity_label . '</span></div>';
+                                border-radius: 16px;">' . wp_kses_post($validity_indicator) . '<span>' . esc_html($validity_label) . '</span></div>';
                             }
                         ?>
                         </div>
-					    <p class="description"><?php echo $props['description']?></p>
+					    <p class="description"><?php echo esc_html($props['description']);?></p>
 				    </fieldset>
 			    </td>
             </tr>
@@ -369,12 +369,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         ?>
             <tr valign="top">
                 <th scope="row" class="titledesc">
-				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?php echo $props['title']?></label>
+				    <label for="taptree_wc_gateway_hosted_checkout_payment_method_logos"><?php echo esc_html($props['title']);?></label>
 			    </th>
                 <td class="forminp">
 				    <fieldset>
-					    <legend class="screen-reader-text"><span><?php echo $props['title']?></span></legend>
-					    <p class="description"><?php echo $props['description']?></p>
+					    <legend class="screen-reader-text"><span><?php echo esc_html($props['title']);?></span></legend>
+					    <p class="description"><?php echo esc_html($props['description']);?></p>
                             <?php
                                 $available_payment_methods = $this->get_option('available_payment_methods');
                                 if (!$available_payment_methods) $available_payment_methods = array();
@@ -382,7 +382,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                                 if (!$chosen_payment_logos) $chosen_payment_logos = array();
                                 
                                 foreach ($available_payment_methods as $method_id) {
-                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . $method_id . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . $method_id . '" id="taptree_wc_gateway_hosted_checkout_' . $method_id . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . $this->paymentService->paymentBrandName($method_id) . '</label><br>';
+                                    echo '<label for="taptree_wc_gateway_hosted_checkout_' . esc_attr($method_id) . '"><input type="checkbox" name="taptree_wc_gateway_hosted_checkout_' . esc_attr($method_id) . '" id="taptree_wc_gateway_hosted_checkout_' . esc_attr($method_id) . '" value="1" ' . (array_key_exists($method_id, $chosen_payment_logos) && $chosen_payment_logos[$method_id] ? 'checked="checked"' : '') . '> ' . esc_html($this->paymentService->paymentBrandName($method_id)) . '</label><br>';
                                 }
                             ?>
 				    </fieldset>
@@ -910,10 +910,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 $instructions = wptexturize($instructions);
 
                 if ($plain_text) {
-                    echo $instructions . PHP_EOL;
+                    echo wp_kses_post($instructions . PHP_EOL);
                 } else {
                     echo '<section class="woocommerce-order-details" >';
-                    echo wpautop($instructions) . PHP_EOL;
+                    echo wp_kses_post(wpautop($instructions) . PHP_EOL);
                     echo '</section>';
                 }
             }
