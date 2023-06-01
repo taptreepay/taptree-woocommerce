@@ -154,7 +154,7 @@ class GatewayModule implements ServiceModule, ExecutableModule
 
         $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$redirect_url}");
 
-        wp_safe_redirect($redirect_url);
+        wp_safe_redirect(esc_url_raw($redirect_url));
         die;
     }
 
