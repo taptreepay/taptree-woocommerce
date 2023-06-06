@@ -35,3 +35,4 @@ Wallets:
 1. Just enter your TapTree API Key(s) and you are ready to go as all other customizations are fully optional.
 2. Display the impact possible for every payment directly in the checkout and increase customer liability and conversion rate.
 3. Our safe and convenient payment popup delivers a frictionless customer experience.
+4. An all-around experience: Payment information and the impact generated are displayed on your thank you page.
