@@ -29,3 +29,9 @@ International and local payment methods:
 Wallets:
 * Apple Pay
 * Google Pay
+
+== Screenshots ==
+
+1. Just enter your TapTree API Key(s) and you are ready to go as all other customizations are fully optional.
+2. Display the impact possible for every payment directly in the checkout and increase customer liability and conversion rate.
+3. Our safe and convenient payment popup delivers a frictionless customer experience.
