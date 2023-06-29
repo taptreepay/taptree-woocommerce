@@ -23,7 +23,7 @@ class PaymentMethodImageBuilder
                 display: inline-block;
                 margin: 4px 2px;
                 cursor: pointer;
-                border-radius: 16px;">-' . str_replace(".", ",", $gateway->getImpactTitle()) . '</div>';
+                border-radius: 16px;">-' . $gateway->getImpactTitle() . '</div>';
             }
         }
 
