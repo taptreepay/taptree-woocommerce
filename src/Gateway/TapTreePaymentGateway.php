@@ -1034,11 +1034,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         return $this->impact;
     }
 
-    public function getImpactTitle()
+     public function getImpactTitle()
     {
         $currentImpact = $this->getImpact();
         if ($currentImpact) {
-            return __($currentImpact->highest_possible_impact->value . ' ' . $currentImpact->highest_possible_impact->unit, 'taptree-payments-for-woocommerce');
+            return __(number_format(floatval($currentImpact->highest_possible_impact->value), 0, ',', '.') . ' ' . $currentImpact->highest_possible_impact->unit, 'taptree-payments-for-woocommerce');
         }
 
         return __(null, 'taptree-payments-for-woocommerce');
@@ -1053,9 +1053,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         if (!$currentImpact) return $this->standardDescription;
 
         if ($this->as_redirect === 'no') {
-            return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.';
+            return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->highest_possible_impact->value), 0, ',', '.')  . ' ' . $currentImpact->highest_possible_impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.';
         }
 
-        return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . str_replace(".", ",", $currentImpact->highest_possible_impact->value) . ' kg CO2</b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.';
+        return 'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->highest_possible_impact->value), 0, ',', '.')  . ' ' . $currentImpact->highest_possible_impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.';
     }
 }
