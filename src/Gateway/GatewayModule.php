@@ -147,14 +147,14 @@ class GatewayModule implements ServiceModule, ExecutableModule
             return;
         }
 
-        $redirect_url = $gateway->getOrderRedirectUrl($order);
+        $return_url = $gateway->getOrderRedirectUrl($order);
 
         // Add utm_nooverride query string
-        $redirect_url = add_query_arg(['utm_nooverride' => 1], $redirect_url);
+        $return_url = add_query_arg(['utm_nooverride' => 1], $return_url);
 
-        $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$redirect_url}");
+        $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$return_url}");
 
-        wp_safe_redirect(esc_url_raw($redirect_url));
+        wp_safe_redirect(esc_url_raw($return_url));
         die;
     }
 

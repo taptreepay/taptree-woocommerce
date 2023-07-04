@@ -57,7 +57,7 @@ class TapTreeApi
           "currency" => mb_strtolower(get_woocommerce_currency()),
         ),
         "description" => "Bestellung #" . $order->get_id(),
-        "redirect_url" => $this->gateway->getReturnUrl(
+        "return_url" => $this->gateway->getReturnUrl(
           $order,
           $this->gateway->get_return_url($order)
         ),
