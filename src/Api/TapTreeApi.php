@@ -51,7 +51,7 @@ class TapTreeApi
         'Authorization' => 'Bearer ' . $this->api_key,
       ),
       'body' => json_encode(array(
-        "capture_method" => "manual",
+        "capture_method" => "automatic",
         "amount" => array(
           "value" => wc_float_to_string($order->get_total()), // number_format( $order->get_total(), 2, '.', '' ),
           "currency" => mb_strtolower(get_woocommerce_currency()),
