@@ -2,7 +2,7 @@
 Contributors: taptree
 Tags: payment, green payment, sustainable payment, sustainability, payments, green payments, sustainable payments, checkout, ecommerce, e-commerce, ecom, e-com
 Requires at least: 6.0
-Tested up to: 6.2
+Tested up to: 6.3
 Stable tag: 1.2.5
 Requires PHP: 7.3
 License: GPLv3 or later
