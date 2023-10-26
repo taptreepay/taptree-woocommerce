@@ -274,6 +274,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     private function init_payment_method_logos($available_payment_methods) {
         $payment_method_logos = array();
+
+        if (!is_array($available_payment_methods)) {
+            return;
+        }
+
         foreach ($available_payment_methods as $method_id){
             $payment_method_logos[$method_id] = 1;
         }
@@ -944,7 +949,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
         } elseif ($payment->status === "authorized" || $payment->status === "paid") {
-            if ($this->show_impact === 'yes') {
+            if ($this->show_impact === 'yes' && isset( $payment->impact->value) && isset($payment->impact->unit)) {
                 return sprintf(
                     /* translators: Placeholder 1: payment method */
                     __(
