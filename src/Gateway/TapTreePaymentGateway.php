@@ -263,7 +263,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     private function alterOption($key, $value, $error_message = '') {
         if ($this->update_option($key, $value)) {
             do_action('woocommerce_update_option', array($key => $value));
-            $this->enabled = get_option($key);
+            if ($key === 'enabled') {
+                $this->enabled = get_option($key);
+            }
                 
             if ($error_message !== '') {
                 WC_Admin_Settings::add_error($error_message);
