@@ -313,6 +313,7 @@ jQuery(function ($) {
           `popup, width=${width}, height=${height}, left=${left}, top=${top}`
         );
         taptreeModalHelper.setTimers();
+        taptreeModalHelper.updateBlockerWhenModalReady();
 
         const checkoutRequestParams = {
           type: 'POST',
@@ -336,8 +337,6 @@ jQuery(function ($) {
                 )
                   ? result.redirect
                   : decodeURI(result.redirect);
-
-                taptreeModalHelper.updateBlockerWhenModalReady();
               } else if ('failure' === result.result) {
                 throw 'Result failure';
               } else {
