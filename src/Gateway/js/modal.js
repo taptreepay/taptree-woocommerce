@@ -245,7 +245,6 @@ jQuery(function ($) {
       ) {
         return;
       }
-      console.log(e);
 
       e.preventDefault();
       e.stopPropagation();
