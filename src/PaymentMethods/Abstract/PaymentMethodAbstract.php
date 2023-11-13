@@ -103,6 +103,12 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
                 'default' => 'yes',
                 'desc_tip'      => true,
             ),
+            'show_method_description' => array(
+                'title' => __('Show payment method description', 'woocommerce'),
+                'type' => 'checkbox',
+                'label' => __('Show the standard description of this payment method if it is selected at checkout.', 'woocommerce'),
+                'default' => 'no',
+            )
         );
     }
 }
