@@ -121,7 +121,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 $this->initModal();
             }
 
-            $this->description = $this->set_payment_description();
+            if ($this->paymentMethod->getProp('show_method_description') === 'yes') {
+                $this->description = $this->set_payment_description();
+            }
 
             $this->setPaymentMethodIcon();
 
@@ -717,7 +719,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         $this->updateImpactIfTotalsChanged($cart);
 
-        $this->description = $this->set_payment_description();
+        if ($this->paymentMethod->getProp('show_method_description') === 'yes') {
+            $this->description = $this->set_payment_description();
+        }
+
 
         $this->setImpactTitle();
     }
