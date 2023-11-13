@@ -16,8 +16,8 @@ class Ideal extends PaymentMethodAbstract implements PaymentMethodInterface
         return
             [
                 'id' => 'ideal',
-                'default_title' => __('iDeal', 'woocommerce'),
-                'settings_description' => __('Accept payments via iDeal', 'woocommerce'),
+                'default_title' => __('iDEAL', 'woocommerce'),
+                'settings_description' => __('Accept payments via iDEAL', 'woocommerce'),
                 'default_description' => '',
                 'has_fields' => false,
                 'instructions' => true,
