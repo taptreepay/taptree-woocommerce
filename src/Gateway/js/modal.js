@@ -240,8 +240,9 @@ jQuery(function ($) {
 
     submit: async function (e) {
       if (
-        document.querySelector('input[name="payment_method"]:checked').value !==
-        'taptree_wc_gateway_hosted_checkout'
+        !document
+          .querySelector('input[name="payment_method"]:checked')
+          .value.startsWith('taptree_wc_gateway_')
       ) {
         return;
       }

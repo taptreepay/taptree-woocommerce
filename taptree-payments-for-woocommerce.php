@@ -23,11 +23,13 @@ use Inpsyde\Modularity\Properties\PluginProperties;
 use TapTree\WooCommerce\Gateway\GatewayModule;
 use TapTree\WooCommerce\Log\LogModule;
 use TapTree\WooCommerce\Notice\NoticeModule;
+use TapTree\WooCommerce\Settings\SettingsModule;
 use TapTree\WooCommerce\Shared\SharedModule;
+use TapTree\WooCommerce\Api\ApiModule;
 use TapTree\WooCommerce\SDK\SDKModule;
 use Throwable;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 //$is_wc_version_greater_than_6_6 = defined( WC_VERSION ) && version_compare( WC_VERSION, '6.6', '>=' );
 require_once(ABSPATH . 'wp-admin/includes/plugin.php');
@@ -95,12 +97,16 @@ function initialize()
             new NoticeModule(),
             new SharedModule(),
             new SDKModule(),
+            new ApiModule(),
+            new SettingsModule(),
             new LogModule('taptree-payments-for-woocommerce-'),
             new GatewayModule()
         ];
 
         $modules = apply_filters('taptree_wc_plugin_modules', $modules);
         $bootstrap->boot(...$modules);
+    } catch (\Throwable $throwable) {
+        handleException($throwable);
     } catch (Throwable $throwable) {
         handleException($throwable);
     }
@@ -111,21 +117,5 @@ function register_assets()
     wp_register_style('taptree-style-overrides', plugins_url('/public/css/taptree-style-overrides.min.css', __FILE__), false, '1.0.0', 'all');
 }
 
-function add_settings_link($links)
-{
-    $link = add_query_arg(array(
-            'page' => 'wc-settings',
-            'tab' => 'checkout',
-            'section' => 'taptree_wc_gateway_hosted_checkout'
-        ), get_admin_url() . 'admin.php');
-
-    $link_html = '<a href="' . esc_url($link) . '">' . __('Settings') . '</a>';
-
-    array_unshift($links, $link_html);
-    
-    return $links;
-}
-
 add_action('plugins_loaded', __NAMESPACE__ . '\initialize');
 add_action('init', __NAMESPACE__ . '\register_assets');
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), __NAMESPACE__ . '\add_settings_link');
