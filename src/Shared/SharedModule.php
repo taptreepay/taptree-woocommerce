@@ -10,9 +10,8 @@ use Inpsyde\Modularity\Module\ModuleClassNameIdTrait;
 use Inpsyde\Modularity\Module\ServiceModule;
 use Inpsyde\Modularity\Package;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface as Logger;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 class SharedModule implements ServiceModule
 {

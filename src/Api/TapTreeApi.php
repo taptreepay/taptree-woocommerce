@@ -4,33 +4,38 @@ namespace TapTree\WooCommerce\Api;
 
 use Exception;
 use TapTree\WooCommerce\Gateway\TapTreePaymentGateway;
-use WP_Error;
+use TapTree\WooCommerce\Settings\SettingsHelper;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 class TapTreeApi
 {
-  /**
-   * @var TapTreePaymentGateway
-   */
-  protected TapTreePaymentGateway $gateway;
+  protected $settingsHelper;
 
-  public function __construct(TapTreePaymentGateway $gateway)
+  protected $apiKey;
+
+  protected $apiUrl;
+
+  protected $versionPath;
+
+  public function __construct(SettingsHelper $settingsHelper)
   {
-    $this->gateway = $gateway;
-    $this->webhook_url = WC()->api_request_url($this->gateway->webhookSlug);
-    $this->api_key = $this->gateway->api_key;
+    $this->settingsHelper = $settingsHelper;
+    $this->apiUrl = 'https://api.taptree.org';
+    $this->versionPath = '/v1';
+
+    $this->apiKey = $this->settingsHelper->getApiKey();
   }
 
   /**
    * @param WC_Order
    * @return object
    */
-  public function create_payment_intent($order)
+  public function create_payment_intent(TapTreePaymentGateway $gateway, $order)
   {
-    $intent_params = $this->intent_params_builder($order);
+    $intent_params = $this->intent_params_builder($gateway, $order);
     $response_raw = wp_safe_remote_post(
-      'https://api.taptree.org/v1/payments', //'https://eu-test.taptree.io/v1/payments',
+      $this->apiUrl . $this->versionPath . '/payments',
       $intent_params
     );
 
@@ -41,25 +46,28 @@ class TapTreeApi
    * @param WC_Order
    * @return array
    */
-  private function intent_params_builder($order)
+  private function intent_params_builder(TapTreePaymentGateway $gateway, $order)
   {
     $params = array(
       'method' => 'POST',
       'data_format' => 'body',
       'headers' => array(
         'Content-Type' => 'application/json; charset=utf-8',
-        'Authorization' => 'Bearer ' . $this->api_key,
+        'Authorization' => 'Bearer ' . $this->apiKey,
       ),
       'body' => json_encode(array(
         "capture_method" => "automatic",
+        "payment_methods" => array(
+          $gateway->paymentMethod->getId(),
+        ),
         "amount" => array(
           "value" => wc_float_to_string($order->get_total()), // number_format( $order->get_total(), 2, '.', '' ),
           "currency" => mb_strtolower(get_woocommerce_currency()),
         ),
         "description" => "Bestellung #" . $order->get_id(),
-        "return_url" => $this->gateway->getReturnUrl(
+        "return_url" => $gateway->getReturnUrl(
           $order,
-          $this->gateway->get_return_url($order)
+          $gateway->get_return_url($order)
         ),
         "billing_address" => array(
           "receiver" => $this->get_length_limited_string($order->get_billing_first_name() . " " . $order->get_billing_last_name()),
@@ -89,7 +97,7 @@ class TapTreeApi
           "order_id" => $order->get_id(),
           "order_key" => $order->get_order_key(),
         ),
-        "webhook_url" => $this->gateway->getWebhookUrl($order, $this->gateway->id),
+        "webhook_url" => $gateway->getWebhookUrl($order, $gateway->id),
       ))
     );
     return $params;
@@ -102,12 +110,12 @@ class TapTreeApi
   public function get_payment($transaction_id)
   {
     $response_raw = wp_safe_remote_get(
-      'https://api.taptree.org/v1/payments/' . $transaction_id,
+      $this->apiUrl . $this->versionPath . '/payments' . '/' . $transaction_id,
       array(
         'method' => 'GET',
         'headers' => array(
           'Content-Type' => 'application/json; charset=utf-8',
-          'Authorization' => 'Bearer ' . $this->api_key,
+          'Authorization' => 'Bearer ' . $this->apiKey,
         )
       )
     );
@@ -122,7 +130,7 @@ class TapTreeApi
   public function get_acceptor_data($token)
   {
     $response_raw = wp_safe_remote_get(
-      'https://api.taptree.org/v1/acceptor',
+      $this->apiUrl . $this->versionPath . '/acceptor',
       array(
         'method' => 'GET',
         'headers' => array(
@@ -144,13 +152,13 @@ class TapTreeApi
   public function capture_payment($transaction_id)
   {
     $response_raw = wp_safe_remote_post(
-      'https://api.taptree.org/v1/payments/' . $transaction_id . '/capture',
+      $this->apiUrl . $this->versionPath . '/payments' . '/' . $transaction_id . '/capture',
       array(
         'method' => 'POST',
         'data_format' => 'body',
         'headers' => array(
           'Content-Type' => 'application/json; charset=utf-8',
-          'Authorization' => 'Bearer ' . $this->api_key,
+          'Authorization' => 'Bearer ' . $this->apiKey,
         ),
         'body' => '{}'
       )
@@ -168,13 +176,13 @@ class TapTreeApi
   public function create_refund($payment, $order, $amount, $reason)
   {
     $response_raw = wp_safe_remote_post(
-      'https://api.taptree.org/v1/payments/' . $payment->id . '/refund',
+      $this->apiUrl . $this->versionPath . '/payments' . '/' . $payment->id . '/refund',
       array(
         'method' => 'POST',
         'data_format' => 'body',
         'headers' => array(
           'Content-Type' => 'application/json; charset=utf-8',
-          'Authorization' => 'Bearer ' . $this->api_key,
+          'Authorization' => 'Bearer ' . $this->apiKey,
         ),
         'body' => json_encode(array(
           "amount" => array(
@@ -204,14 +212,14 @@ class TapTreeApi
   public function get_impact_info($total_amount, $omit_payment_methods)
   {
     $response_raw = wp_safe_remote_post(
-      'https://api.taptree.org/v1/impact',
+      $this->apiUrl . $this->versionPath . '/impact',
       array(
         'timeout' => 3, // don't block too long if there is an issue. should rarely happen because of HA
         'method' => 'POST',
         'data_format' => 'body',
         'headers' => array(
           'Content-Type' => 'application/json; charset=utf-8',
-          'Authorization' => 'Bearer ' . $this->api_key,
+          'Authorization' => 'Bearer ' . $this->apiKey,
         ),
         'body' => json_encode(array(
           "omit_payment_methods" => $omit_payment_methods,
@@ -224,6 +232,69 @@ class TapTreeApi
     );
 
     return $this->parse_response_safe($response_raw);
+  }
+
+  public function validateApiKeys($values)
+  {
+    $return = $values;
+
+    $test_key = $values[$this->settingsHelper->getSettingId('api_key_test')];
+    $live_key = $values[$this->settingsHelper->getSettingId('api_key_live')];
+    $live_mode = $values[$this->settingsHelper->getSettingId('live_mode')] === true ||
+      $values[$this->settingsHelper->getSettingId('live_mode')] === 'yes';
+
+    $is_test_key_valid = false;
+    $is_live_key_valid = false;
+
+    $test_key_acceptor_data = null;
+    $live_key_acceptor_data = null;
+
+    $available_payment_methods = null;
+
+    // Validate api keys
+    if ($test_key && strlen($test_key) !== 0) {
+      try {
+        $test_key_acceptor_data = $this->get_acceptor_data($test_key);
+        $is_test_key_valid = $this->settingsHelper->isApiKeyValid($test_key_acceptor_data, 'test');
+      } catch (\Exception $e) {
+        $test_key_acceptor_data = array();
+        $is_test_key_valid = false;
+      }
+    }
+
+    if ($live_key && strlen($live_key) !== 0) {
+      try {
+        $live_key_acceptor_data = $this->get_acceptor_data($live_key);
+        $is_live_key_valid = $this->settingsHelper->isApiKeyValid($live_key_acceptor_data, 'live');
+      } catch (\Exception $e) {
+        $live_key_acceptor_data = array();
+        $is_live_key_valid = false;
+      }
+    }
+
+    update_option($this->settingsHelper->getSettingId('is_test_key_valid'), $is_test_key_valid);
+    update_option($this->settingsHelper->getSettingId('is_live_key_valid'), $is_live_key_valid);
+
+    // Validate live mode
+    if ($live_mode) {
+      if ($is_live_key_valid) {
+        $available_payment_methods = $live_key_acceptor_data->available_payment_methods;
+      } else {
+        if ($is_test_key_valid) {
+          $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+        }
+        $this->settingsHelper->addUserNotification('A valid TapTree API live key is required for "live mode" to be enabled.', 'error');
+        $return[$this->settingsHelper->getSettingId('live_mode')] = false;
+      }
+    } else {
+      if ($is_test_key_valid) {
+        $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+      }
+    }
+
+    update_option($this->settingsHelper->getSettingId('available_payment_methods'), $available_payment_methods);
+
+    return $return;
   }
 
   /**

@@ -11,15 +11,16 @@ use Inpsyde\Modularity\Module\ModuleClassNameIdTrait;
 use Inpsyde\Modularity\Module\ServiceModule;
 use TapTree\WooCommerce\SDK\HttpResponse;
 use TapTree\WooCommerce\Notice\AdminNotice;
-use TapTree\WooCommerce\Notice\NoticeInterface;
 use TapTree\WooCommerce\Payment\PaymentService;
 use TapTree\WooCommerce\Shared\SharedDataDictionary;
+use TapTree\WooCommerce\Api\TapTreeApi;
+use TapTree\WooCommerce\Settings\SettingsHelper;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface as Logger;
 use WC_Order;
 use RuntimeException;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 class GatewayModule implements ServiceModule, ExecutableModule
 {
@@ -43,6 +44,9 @@ class GatewayModule implements ServiceModule, ExecutableModule
             },
             'gateway.instances' => function (ContainerInterface $container): array {
                 return $this->instantiatePaymentMethodGateways($container);
+            },
+            'gateway.payment_methods' => static function (ContainerInterface $container): array {
+                return (new self())->instantiatePaymentMethods($container);
             },
             PaymentService::class => static function (ContainerInterface $container): PaymentService {
                 $HttpResponseService = $container->get('SDK.HttpResponse');
@@ -78,31 +82,71 @@ class GatewayModule implements ServiceModule, ExecutableModule
     }
 
 
+    protected function instantiatePaymentMethods($container): array
+    {
+        $settingsHelper = $container->get('settings.settings_helper');
+        assert($settingsHelper instanceof SettingsHelper);
+
+        $paymentMethods = [];
+        $allPaymentMethodsIds = ['card', 'paypal', 'sofort', 'giropay', 'eps', 'alipay', 'wechat', 'ideal', 'payconiq', 'paysafecard', 'przelewy', 'riverty', 'sepa_direct_debit', 'trustly', 'spraypay', 'in3', 'blik'];
+        foreach ($allPaymentMethodsIds as $paymentMethodId) {
+            $paymentMethods[$paymentMethodId] = $this->buildPaymentMethod(
+                $paymentMethodId,
+                $settingsHelper
+            );
+        }
+
+        return $paymentMethods;
+    }
+
+
+    public function buildPaymentMethod(
+        string $id,
+        SettingsHelper $settingsHelper,
+    ) {
+        $paymentMethodClassName = 'TapTree\\WooCommerce\\PaymentMethods\\' . ucfirst($id);
+        if (class_exists($paymentMethodClassName)) {
+            $paymentMethod = new $paymentMethodClassName($settingsHelper);
+            return $paymentMethod;
+        }
+    }
+
+
     public function instantiatePaymentMethodGateways(ContainerInterface $container): array
     {
+        $settingsHelper = $container->get('settings.settings_helper');
+        assert($settingsHelper instanceof SettingsHelper);
         $logger = $container->get(Logger::class);
         assert($logger instanceof Logger);
         $notice = $container->get(AdminNotice::class);
         assert($notice instanceof AdminNotice);
         $HttpResponseService = $container->get('SDK.HttpResponse');
         assert($HttpResponseService instanceof HttpResponse);
+        $api = $container->get('Api.taptree_api');
+        assert($api instanceof TapTreeApi);
+        $paymentMethods = $container->get('gateway.payment_methods');
         $pluginId = $container->get('shared.plugin_id');
         $paymentService = $container->get(PaymentService::class);
         assert($paymentService instanceof PaymentService);
         //$logger->debug(__METHOD__);
-
         wp_enqueue_style('taptree-style-overrides');
 
-        // might loop over gateways in the future for individual payment method gateways
-        $gatewayId = "taptree_wc_gateway_hosted_checkout";
-        $gateways[] = new TapTreePaymentGateway(
-            $gatewayId,
-            $logger,
-            $notice,
-            $HttpResponseService,
-            $paymentService,
-            $pluginId
-        );
+        $availablePaymentMethodsIds = $settingsHelper->getAvailablePaymentMethodsIds();
+        $gateways = [];
+        foreach ($paymentMethods as $id => $paymentMethod) {
+            if (in_array($id, $availablePaymentMethodsIds) && !is_null($paymentMethod)) {
+                $gateways[$id] = new TapTreePaymentGateway(
+                    $paymentMethod,
+                    $settingsHelper,
+                    $api,
+                    $logger,
+                    $notice,
+                    $HttpResponseService,
+                    $paymentService,
+                    $pluginId
+                );
+            }
+        }
 
         return $gateways;
     }
@@ -122,6 +166,10 @@ class GatewayModule implements ServiceModule, ExecutableModule
         try {
             // strange php that this is in scope outside of the try block
             $order = self::orderByRequest();
+        } catch (\RuntimeException $exc) {
+            $this->httpResponse->setHttpResponseCode($exc->getCode());
+            $this->logger->debug(__METHOD__ . ":  {$exc->getMessage()}");
+            return;
         } catch (RuntimeException $exc) {
             $this->httpResponse->setHttpResponseCode($exc->getCode());
             $this->logger->debug(__METHOD__ . ":  {$exc->getMessage()}");

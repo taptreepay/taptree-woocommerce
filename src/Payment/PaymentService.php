@@ -7,12 +7,10 @@ use TapTree\WooCommerce\Api\TapTreeApi;
 use TapTree\WooCommerce\Gateway\TapTreePaymentGateway;
 use TapTree\WooCommerce\SDK\HttpResponse;
 use Psr\Log\LoggerInterface as Logger;
-use Psr\Log\LogLevel;
 use WC_Order;
-use Throwable;
 use WP_Error;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 class PaymentService
 {
@@ -161,6 +159,10 @@ class PaymentService
                     $payment->id
                 ));
             }
+        } catch (\Exception $e) {
+            $this->logger->debug(__METHOD__ . ': exception: ' . $e->getMessage());
+            $this->httpResponse->setHttpResponseCode(500);
+            return;
         } catch (Exception $e) {
             $this->logger->debug(__METHOD__ . ': exception: ' . $e->getMessage());
             $this->httpResponse->setHttpResponseCode(500);
@@ -195,7 +197,6 @@ class PaymentService
         }
 
         return;
-        
     }
 
     public function getPaymentMethodName($payment)
@@ -272,6 +273,12 @@ class PaymentService
             }
 
             $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Payment partially captured.', 'woocommerce'));
+        } catch (\Exception $e) {
+            $this->logger->debug($this->gateway->id . ": Capture failed with error: " . $e->getMessage());
+            $order->add_order_note(__('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
+            $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
+            $this->httpResponse->setHttpResponseCode(500);
+            return new WP_Error('taptree_capture_failed', $e->get_message());
         } catch (Exception $e) {
             $this->logger->debug($this->gateway->id . ": Capture failed with error: " . $e->getMessage());
             $order->add_order_note(__('Capture failed. Next attempt might be scheduled.', 'woocommerce'));

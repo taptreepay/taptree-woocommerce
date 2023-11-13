@@ -1,3 +1,32 @@
 .wc_payment_method > label {
   vertical-align: baseline;
 }
+
+:root {
+  --responsive-grid-item-width: 225px;
+}
+
+.flexbox {
+  display: flex;
+  align-items: center;
+}
+
+.responsive-grid-container {
+  display: grid;
+  row-gap: 15px;
+  column-gap: 60px;
+  padding: 10px;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--responsive-grid-item-width), 1fr)
+  );
+}
+
+.responsive-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 15px;
+  height: 30px;
+  width: var(--responsive-grid-item-width);
+}
