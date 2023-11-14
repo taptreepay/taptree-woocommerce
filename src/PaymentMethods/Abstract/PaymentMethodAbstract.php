@@ -28,7 +28,15 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
 
     public function getLogoHTML(): string
     {
-        return '<img style="height:30px; max-height: unset; margin: -2px 0 0 0; padding: 0; vertical-algin: unset;" src="' . $this->getLogoBase64() . '" alt="' . $this->getProp('default_title') . '" />';
+        return '<img style="'
+            . 'height:30px;'
+            . 'max-height: unset;'
+            . 'margin: -2px 0 0 0;'
+            . 'padding: 0;'
+            . 'vertical-algin: unset;'
+            . 'float: right;" '
+            . 'src="' . $this->getLogoBase64() . '" '
+            . 'alt="' . $this->getProp('default_title') . '" />';
     }
 
     public function getPropsAndSettings(): array
