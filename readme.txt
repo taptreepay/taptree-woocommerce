@@ -23,8 +23,22 @@ Credit and debit cards (depending on the selected acquirer):
 * Maestro
 
 International and local payment methods:
-* Sofortüberweisung
+* Sofort
 * PayPal
+* Giropay
+* EPS
+* Alipay
+* WeChat Pay
+* iDEAL
+* Payconiq
+* Paysafecard
+* Przelewy24
+* Riverty
+* Sepa Direct Debit
+* Trustly
+* SprayPay
+* in3
+* Blik
 
 Wallets:
 * Apple Pay
@@ -33,6 +47,7 @@ Wallets:
 == Screenshots ==
 
 1. Just enter your TapTree API Key(s) and you are ready to go as all other customizations are fully optional.
-2. Display the impact possible for every payment directly in the checkout and increase customer liability and conversion rate.
-3. Our safe and convenient payment popup delivers a frictionless customer experience.
-4. An all-around experience: Payment information and the impact generated are displayed on your thank you page.
+2. Customize the settings of each payment method gateway to adjust your customers' checkout experience.
+3. Display the impact possible for every payment directly in the checkout and increase customer liability and conversion rate.
+4. Our safe and convenient payment popup delivers a frictionless customer experience.
+5. An all-around experience: Payment information and the impact generated are displayed on your thank you page.
