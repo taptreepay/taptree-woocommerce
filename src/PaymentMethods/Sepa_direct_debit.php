@@ -38,7 +38,7 @@ class Sepa_direct_debit extends PaymentMethodAbstract implements PaymentMethodIn
         return $sharedFormFields;
     }
 
-    protected function getLogoBase64(): string
+    protected function getLogoUrl(): string
     {
         return $this->settingsHelper->getPluginUrl() . 'public/logos/payment-methods/' . $this->getId() . '.svg';
     }

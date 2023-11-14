@@ -35,7 +35,7 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
             . 'padding: 0;'
             . 'vertical-algin: unset;'
             . 'float: right;" '
-            . 'src="' . $this->getLogoBase64() . '" '
+            . 'src="' . $this->getLogoUrl() . '" '
             . 'alt="' . $this->getProp('default_title') . '" />';
     }
 
