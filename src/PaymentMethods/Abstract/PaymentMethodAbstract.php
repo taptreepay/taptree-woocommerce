@@ -84,7 +84,7 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
             'enabled' => array(
                 'title' => __('Enable/Disable', 'woocommerce'),
                 'type' => 'checkbox',
-                'label' => __('Enable TapTree Payments', 'woocommerce'),
+                'label' => __('Enable TapTree | ' . $defaultTitle, 'woocommerce'),
                 'default' => 'no'
             ),
             'title' => array(
