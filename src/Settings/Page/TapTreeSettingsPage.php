@@ -29,6 +29,8 @@ class TapTreeSettingsPage extends WC_Settings_Page
 
     protected $paymentMethods;
 
+    private $needToRefresh;
+
     public function __construct(TapTreeApi $api, SettingsHelper $settingsHelper, array $paymentGateways, array $paymentMethods)
     {
         $this->id = 'taptree_settings';
@@ -37,11 +39,14 @@ class TapTreeSettingsPage extends WC_Settings_Page
         $this->settingsHelper = $settingsHelper;
         $this->paymentGateways = $paymentGateways;
         $this->paymentMethods = $paymentMethods;
+        $this->needToRefresh = false;
         add_action(
             'woocommerce_sections_' . $this->id,
             [$this, 'output_sections']
         );
         add_action('woocommerce_admin_field_api_key', [$this, 'generate_api_key_html']);
+
+        add_action('woocommerce_settings_saved', [$this, 'toggle_need_to_refresh']);
 
         if ($_POST['refresh_payment_methods'] === 'yes') {
             $this->refresh_payment_methods();
@@ -89,9 +94,6 @@ class TapTreeSettingsPage extends WC_Settings_Page
     {
         $availableMethodsIds =  $this->settingsHelper->getAvailablePaymentMethodsIds();
 
-        // TODO: show refresh always and also update available methods from API
-        $needToRefresh = count($this->paymentGateways) === 0 || count(array_diff(array_keys($this->paymentGateways), $availableMethodsIds)) > 0;
-
         $paymentMethodsSection = '';
 
         if (count($availableMethodsIds)) {
@@ -109,8 +111,8 @@ class TapTreeSettingsPage extends WC_Settings_Page
                 '<div style=" margin: 10px 0 10px 0; font-weight: bold;';
 
             $paymentMethodsSection .= (
-                $needToRefresh ?
-                'color: #d63638;">' . __('Gateways changed. Please refresh:') :
+                $this->needToRefresh ?
+                'color: #d63638;">' . __('Your settings changed. Please refresh:') :
                 '">' . __('The payment settings in your TapTree dashboard changed? Please refresh:')
             ) . '&emsp;';
 
@@ -131,7 +133,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
                 . '</button>'
                 . '</div>';
 
-            if (!$needToRefresh) {
+            if (!$this->needToRefresh) {
                 $count = 0;
                 foreach ($this->paymentMethods as $id => $paymentMethod) {
                     $gridItemContent =
@@ -250,6 +252,11 @@ class TapTreeSettingsPage extends WC_Settings_Page
         return admin_url(
             'admin.php?page=wc-settings&tab=checkout&section=' . sanitize_title(strtolower($paymentGatewayId))
         );
+    }
+
+    public function toggle_need_to_refresh()
+    {
+        $this->needToRefresh = !$this->needToRefresh;
     }
 
     public function generate_api_key_html($props)
