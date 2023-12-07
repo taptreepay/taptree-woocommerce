@@ -240,8 +240,10 @@ class TapTreeApi
 
     $test_key = $values[$this->settingsHelper->getSettingId('api_key_test')];
     $live_key = $values[$this->settingsHelper->getSettingId('api_key_live')];
-    $live_mode = $values[$this->settingsHelper->getSettingId('live_mode')] === true ||
-      $values[$this->settingsHelper->getSettingId('live_mode')] === 'yes';
+    $live_mode = boolval($values[$this->settingsHelper->getSettingId('live_mode')] === true ||
+      $values[$this->settingsHelper->getSettingId('live_mode')] === 1 ||
+      $values[$this->settingsHelper->getSettingId('live_mode')] === '1' ||
+      $values[$this->settingsHelper->getSettingId('live_mode')] === 'yes');
 
     $is_test_key_valid = false;
     $is_live_key_valid = false;
