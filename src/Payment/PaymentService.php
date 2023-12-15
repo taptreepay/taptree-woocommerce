@@ -80,7 +80,7 @@ class PaymentService
             }
 
             // Check whether a payment id has been provided in the call
-            if (empty($json_data['id'])) {
+            if (empty($json_data['data']['id'])) {
                 $this->httpResponse->setHttpResponseCode(400);
                 $this->logger->debug(__METHOD__ . ' | No payment object ID provided.', [true]);
                 return;
@@ -112,7 +112,14 @@ class PaymentService
             $this->gateway = $gateway;
 
             // we take the id
-            $paymentId = sanitize_text_field($json_data['id']);
+            $paymentId = isset($json_data['data']['id']) ? sanitize_text_field($json_data['data']['id']) : null;
+
+            if (empty($paymentId)) {
+                $this->httpResponse->setHttpResponseCode(400);
+                $this->logger->debug(__METHOD__ . ' | No payment ID provided in the data object.', [true]);
+                return;
+            }
+
             $payment = $this->taptreeApi->get_payment($paymentId);
             $this->logger->debug(__METHOD__ . ":  " . json_encode($payment));
 
