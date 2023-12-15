@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Settings;
 
+use stdClass;
 use WC_Admin_Settings;
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
@@ -122,5 +123,37 @@ class SettingsHelper
         }
 
         return '';
+    }
+
+    public function sanitizeRecursively(mixed $data): mixed
+    {
+        switch (gettype($data)) {
+            case 'array':
+                $sanitizedData = array();
+                foreach ($data as $key => $value) {
+                    $sanitizedData[$key] = $this->sanitizeRecursively($value);
+                }
+                return $sanitizedData;
+            case 'object':
+                $sanitizedData = new stdClass();
+                foreach ($data as $key => $value) {
+                    $sanitizedData->$key = $this->sanitizeRecursively($value);
+                }
+                return $sanitizedData;
+            case 'string':
+                return sanitize_text_field($data);
+            case 'boolean':
+                return $data;
+            case 'integer':
+                return $data;
+            case 'double':
+                return $data;
+            case 'resource':
+                return null;
+            case 'unknown type':
+                return null;
+            default:
+                return null;
+        }
     }
 }

@@ -7,6 +7,7 @@ use TapTree\WooCommerce\Api\TapTreeApi;
 use TapTree\WooCommerce\Gateway\TapTreePaymentGateway;
 use TapTree\WooCommerce\SDK\HttpResponse;
 use Psr\Log\LoggerInterface as Logger;
+use TapTree\WooCommerce\Settings\SettingsHelper;
 use WC_Order;
 use WP_Error;
 
@@ -19,6 +20,10 @@ class PaymentService
      * @var HttpResponse
      */
     private $httpResponse;
+    /**
+     * @var SettingsHelper
+     */
+    private $settingsHelper;
     /**
      * @var Logger
      */
@@ -33,10 +38,12 @@ class PaymentService
 
     public function __construct(
         HttpResponse $httpResponse,
+        SettingsHelper $settingsHelper,
         Logger $logger,
         string $pluginId
     ) {
         $this->httpResponse = $httpResponse;
+        $this->settingsHelper = $settingsHelper;
         $this->logger = $logger;
         $this->pluginId = $pluginId;
 
@@ -57,17 +64,19 @@ class PaymentService
         $this->logger->debug(__METHOD__ . ":  Gateway " . $this->gateway->id);
         try {
             // simply decode the json data from the request
-            $json_data = json_decode(file_get_contents('php://input'), true);
-            $get_data = array();
-            foreach ($_GET as $key => $value) {
-                $get_data[$key] = sanitize_text_field($value);
-            }
+            $headers = $this->settingsHelper->sanitizeRecursively(array_change_key_case(getallheaders()));
 
-            $this->logger->debug(__METHOD__ . ":  " . json_encode($json_data));
+            $data = json_decode(file_get_contents('php://input'), true);
+            $json_data = json_encode($data);
+
+            $get_data = $this->settingsHelper->sanitizeRecursively($_GET);
+
+            $this->logger->debug(__METHOD__ . ":  " . json_encode($headers));
+            $this->logger->debug(__METHOD__ . ":  " . $json_data);
             $this->logger->debug(__METHOD__ . ":  " . json_encode($get_data));
 
             // Webhook test by TapTree
-            if (isset($json_data['testedByTapTree'])) {
+            if (isset($data['testedByTapTree'])) {
                 $this->httpResponse->setHttpResponseCode(200);
                 $this->logger->debug(__METHOD__ . ' | Webhook tested by TapTree.', [true]);
                 return;
@@ -80,7 +89,7 @@ class PaymentService
             }
 
             // Check whether a payment id has been provided in the call
-            if (empty($json_data['data']['id'])) {
+            if (empty($data['data']['id'])) {
                 $this->httpResponse->setHttpResponseCode(400);
                 $this->logger->debug(__METHOD__ . ' | No payment object ID provided.', [true]);
                 return;
@@ -112,7 +121,7 @@ class PaymentService
             $this->gateway = $gateway;
 
             // we take the id
-            $paymentId = isset($json_data['data']['id']) ? sanitize_text_field($json_data['data']['id']) : null;
+            $paymentId = isset($data['data']['id']) ? sanitize_text_field($data['data']['id']) : null;
 
             if (empty($paymentId)) {
                 $this->httpResponse->setHttpResponseCode(400);
@@ -120,7 +129,16 @@ class PaymentService
                 return;
             }
 
-            $payment = $this->taptreeApi->get_payment($paymentId);
+            $payment = null;
+
+            if ($this->checkSignature($json_data, $headers)) {
+                $this->logger->debug(__METHOD__ . ":  " . "Signature valid; taking payment from message");
+                $payment = $this->settingsHelper->sanitizeRecursively(json_decode(json_encode($data['data'])));
+            } else {
+                $this->logger->debug(__METHOD__ . ":  " . "Signature invalid; requesting payment from API");
+                $payment = $this->taptreeApi->get_payment($paymentId);
+            }
+
             $this->logger->debug(__METHOD__ . ":  " . json_encode($payment));
 
             // Payment not found
@@ -175,6 +193,28 @@ class PaymentService
             $this->httpResponse->setHttpResponseCode(500);
             return;
         }
+    }
+
+    public function checkSignature(string $signedData, array $headers): bool
+    {
+        if (
+            !isset($headers['signature-secret-id']) ||
+            !isset($headers['signature']) ||
+            !isset($headers['signature-method']) ||
+            !isset($headers['signature-algo'])
+        ) {
+            return false;
+        }
+
+        $generatedSignature = null;
+
+        switch ($headers['signature-method']) {
+            case 'HMAC':
+                $generatedSignature = hash_hmac(strtolower($headers['signature-algo']), $signedData, get_option($this->settingsHelper->getSettingId('webhook_secret')));
+                break;
+        }
+
+        return $headers['signature'] === $generatedSignature;
     }
 
     public function paymentBrandName($brandKey)
