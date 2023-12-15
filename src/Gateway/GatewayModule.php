@@ -51,10 +51,12 @@ class GatewayModule implements ServiceModule, ExecutableModule
             PaymentService::class => static function (ContainerInterface $container): PaymentService {
                 $HttpResponseService = $container->get('SDK.HttpResponse');
                 assert($HttpResponseService instanceof HttpResponse);
+                $settingsHelper = $container->get('settings.settings_helper');
+                assert($settingsHelper instanceof SettingsHelper);
                 $logger = $container->get(Logger::class);
                 assert($logger instanceof Logger);
                 $pluginId = $container->get('shared.plugin_id');
-                return new PaymentService($HttpResponseService, $logger, $pluginId);
+                return new PaymentService($HttpResponseService, $settingsHelper, $logger, $pluginId);
             },
         ];
     }

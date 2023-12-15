@@ -239,6 +239,12 @@ class TapTreeSettingsPage extends WC_Settings_Page
                 'default' => 'no'
             ],
             [
+                'id' => $this->settingsHelper->getSettingId('webhook_secret'),
+                'title' => __('Webhook Secret', 'woocommerce'),
+                'type' => 'password',
+                'desc' => __('Your webhook secret can be found in your TapTree dashboard. If you do not provide a webhook secret an additional API call is performed.', 'woocommerce'),
+            ],
+            [
                 'id' => '',
                 'type' => 'sectionend'
             ],
