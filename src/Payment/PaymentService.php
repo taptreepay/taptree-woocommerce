@@ -210,7 +210,11 @@ class PaymentService
 
         switch ($headers['signature-method']) {
             case 'HMAC':
-                $generatedSignature = hash_hmac(strtolower($headers['signature-algo']), $signedData, get_option($this->settingsHelper->getSettingId('webhook_secret')));
+                $generatedSignature = hash_hmac(
+                    strtolower($headers['signature-algo']),
+                    $signedData,
+                    get_option($this->settingsHelper->getSettingId('webhook_secret')) ?? ''
+                );
                 break;
         }
 
