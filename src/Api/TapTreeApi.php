@@ -69,21 +69,25 @@ class TapTreeApi
           $order,
           $gateway->get_return_url($order)
         ),
-        "billing_address" => array(
-          "receiver" => $this->get_length_limited_string($order->get_billing_first_name() . " " . $order->get_billing_last_name()),
-          "street_and_number" => $this->get_length_limited_string($order->get_billing_address_1()),
-          "additional_address_information" => $this->get_length_limited_string($order->get_billing_address_2()),
-          "postal_code" => $this->get_length_limited_string(wc_format_postcode($order->get_billing_postcode(), $order->get_billing_country())),
-          "city" => $this->get_length_limited_string($order->get_billing_city()),
-          "country" => $this->get_length_limited_string($order->get_billing_country()),
+        "billing" => array(
+          "name" => $this->get_length_limited_string($order->get_billing_first_name() . " " . $order->get_billing_last_name()),
+          "address" => array(
+            "street_and_number" => $this->get_length_limited_string($order->get_billing_address_1()),
+            "additional_address_information" => $this->get_length_limited_string($order->get_billing_address_2()),
+            "postal_code" => $this->get_length_limited_string(wc_format_postcode($order->get_billing_postcode(), $order->get_billing_country())),
+            "city" => $this->get_length_limited_string($order->get_billing_city()),
+            "country" => $this->get_length_limited_string($order->get_billing_country()),
+          ),
         ),
-        "shipping_address" => array(
-          "receiver" => $this->get_length_limited_string($order->get_shipping_first_name() . " " . $order->get_shipping_last_name()),
-          "street_and_number" => $this->get_length_limited_string($order->get_shipping_address_1()),
-          "additional_address_information" => $this->get_length_limited_string($order->get_shipping_address_2()),
-          "postal_code" => $this->get_length_limited_string(wc_format_postcode($order->get_shipping_postcode(), $order->get_shipping_country())),
-          "city" => $this->get_length_limited_string($order->get_shipping_city()),
-          "country" => $this->get_length_limited_string($order->get_shipping_country()),
+        "shipping" => array(
+          "name" => $this->get_length_limited_string($order->get_shipping_first_name() . " " . $order->get_shipping_last_name()),
+          "address" => array(
+            "street_and_number" => $this->get_length_limited_string($order->get_shipping_address_1()),
+            "additional_address_information" => $this->get_length_limited_string($order->get_shipping_address_2()),
+            "postal_code" => $this->get_length_limited_string(wc_format_postcode($order->get_shipping_postcode(), $order->get_shipping_country())),
+            "city" => $this->get_length_limited_string($order->get_shipping_city()),
+            "country" => $this->get_length_limited_string($order->get_shipping_country()),
+          ),
         ),
         "customer" => array(
           "id" => $this->get_length_limited_string(strval($order->get_user_id())), // $this->get_length_limited_string( strval($order->get_customer_id()) ),
