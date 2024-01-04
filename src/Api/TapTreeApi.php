@@ -156,7 +156,7 @@ class TapTreeApi
   public function capture_payment($transaction_id)
   {
     $response_raw = wp_safe_remote_post(
-      $this->apiUrl . $this->versionPath . '/payments' . '/' . $transaction_id . '/capture',
+      $this->apiUrl . $this->versionPath . '/payments' . '/' . $transaction_id . '/captures',
       array(
         'method' => 'POST',
         'data_format' => 'body',
@@ -180,7 +180,7 @@ class TapTreeApi
   public function create_refund($payment, $order, $amount, $reason)
   {
     $response_raw = wp_safe_remote_post(
-      $this->apiUrl . $this->versionPath . '/payments' . '/' . $payment->id . '/refund',
+      $this->apiUrl . $this->versionPath . '/payments' . '/' . $payment->id . '/refunds',
       array(
         'method' => 'POST',
         'data_format' => 'body',
