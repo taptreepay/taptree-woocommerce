@@ -6,28 +6,47 @@ Currently, this plugin is only redirecting to a hosted checkout.
 
 ## Available payment methods in TapTree's hosted checkout
 
-Credit and debit cards (depending on the selected acquirer):
+Credit and debit cards:
 
 - VISA
 - MasterCard
 - American Express
+- Carte Bancaire
+- DanKort
+- PostePay
+- Nexi
 
-International and local payment methods:
-
-- Sofortüberweisung
-- PayPal
-
-Wallets:
+International payment methods:
 
 - Apple Pay
-- Google Pay
+- PayPal
+- Paysafecard
+
+Local payment methods
+
+- SOFORT Banking (EU)
+- Trustly (EU)
+- Payconiq (Luxembourg, Belgium)
+- iDEAL (Netherlands)
+- EPS (Austria)
+- WeChat Pay (China)
+- SEPA Bank Transfer (EU)
+- SEPA Direct Debit (EU)
+- Blik (Poland)
+- Przelewy24 (Poland)
+
+Buy Now Pay Later (BNPL)
+
+- Klarna
+- iDEAL IN3
+- Riverty
 
 ## Features
 
 - Showing impact information in WooCommerce along with the payment methods (e.g., 5.13 kg CO2e)
-- Support for refunds
+- Support for refunds from WooCommerce
 - Debugging log
 
 # License
 
-[GPLv3 (GNU General Public License, version 3) License](http://www.gnu.org/licenses/gpl-3.0.html). Copyright 2023, TapTree GmbH.
+[GPLv3 (GNU General Public License, version 3) License](http://www.gnu.org/licenses/gpl-3.0.html). Copyright 2024, TapTree GmbH.
