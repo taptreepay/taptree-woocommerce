@@ -3,7 +3,7 @@ Contributors: taptree
 Tags: payment, green payment, sustainable payment, sustainability, payments, green payments, sustainable payments, checkout, ecommerce, e-commerce, ecom, e-com
 Requires at least: 6.0
 Tested up to: 6.7.1
-Stable tag: 2.0.2
+Stable tag: 2.0.3
 Requires PHP: 7.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -15,34 +15,39 @@ Accept payments and protect the climate in WooCommerce with the official TapTree
 Quickly integrate the best payment for sustainable shopping experiences. With TapTree you link all important payment methods with climate protection, enrich your customer journey with social and ecological content and increase your perception as a sustainability pioneer.
 
 == Available payment methods ==
-Credit and debit cards (depending on the selected acquirer):
+Credit and debit cards:
+
 * VISA
 * MasterCard
 * American Express
-* V Pay
-* Maestro
+* Carte Bancaire
+* DanKort
+* PostePay
+* Nexi
 
-International and local payment methods:
-* Sofort
-* PayPal
-* Giropay
-* EPS
-* Alipay
-* WeChat Pay
-* iDEAL
-* Payconiq
-* Paysafecard
-* Przelewy24
-* Riverty
-* Sepa Direct Debit
-* Trustly
-* SprayPay
-* in3
-* Blik
+International payment methods:
 
-Wallets:
 * Apple Pay
-* Google Pay
+* PayPal
+* Paysafecard
+
+Local payment methods
+
+* SOFORT Banking (EU)
+* Trustly (EU)
+* Payconiq (Luxembourg, Belgium)
+* iDEAL (Netherlands)
+* EPS (Austria)
+* WeChat Pay (China)
+* SEPA Bank Transfer (EU)
+* SEPA Direct Debit (EU)
+* Blik (Poland)
+* Przelewy24 (Poland)
+
+Buy Now Pay Later (BNPL)
+* Klarna
+* iDEAL IN3
+* Riverty
 
 == Screenshots ==
 
