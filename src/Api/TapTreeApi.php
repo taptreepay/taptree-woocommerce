@@ -284,17 +284,17 @@ class TapTreeApi
     // Validate live mode
     if ($live_mode) {
       if ($is_live_key_valid) {
-        $available_payment_methods = $live_key_acceptor_data->available_payment_methods;
+        $available_payment_methods = $live_key_acceptor_data->active_payment_methods;
       } else {
         if ($is_test_key_valid) {
-          $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+          $available_payment_methods = $test_key_acceptor_data->active_payment_methods;
         }
         $this->settingsHelper->addUserNotification('A valid TapTree API live key is required for "live mode" to be enabled.', 'error');
         $return[$this->settingsHelper->getSettingId('live_mode')] = false;
       }
     } else {
       if ($is_test_key_valid) {
-        $available_payment_methods = $test_key_acceptor_data->available_payment_methods;
+        $available_payment_methods = $test_key_acceptor_data->active_payment_methods;
       }
     }
 
