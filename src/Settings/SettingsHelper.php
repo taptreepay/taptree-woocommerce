@@ -92,13 +92,14 @@ class SettingsHelper
             return false;
         }
 
-        if ($keyType === 'test' && $acceptorData->test_mode) {
+        if ($keyType === 'test' && $acceptorData->mode === 'test') {
             return true;
         }
 
-        if ($keyType === 'live' && !$acceptorData->test_mode) {
+        if ($keyType === 'live' && $acceptorData->mode === 'live') {
             return true;
         }
+
 
         return false;
     }
