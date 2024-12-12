@@ -64,7 +64,7 @@ class TapTreeApi
           "value" => wc_float_to_string($order->get_total()), // number_format( $order->get_total(), 2, '.', '' ),
           "currency" => mb_strtolower(get_woocommerce_currency()),
         ),
-        "description" => "Bestellung #" . $order->get_id(),
+        "description" => "#" . $order->get_id(),
         "return_url" => $gateway->getReturnUrl(
           $order,
           $gateway->get_return_url($order)
