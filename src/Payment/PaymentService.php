@@ -66,8 +66,9 @@ class PaymentService
             // simply decode the json data from the request
             $headers = $this->settingsHelper->sanitizeRecursively(array_change_key_case(getallheaders()));
 
-            $data = json_decode(file_get_contents('php://input'), true);
-            $json_data = json_encode($data);
+            $raw_body = file_get_contents('php://input');
+            $data = json_decode($raw_body, true);
+            $json_data = json_encode($data);;
 
             $get_data = $this->settingsHelper->sanitizeRecursively($_GET);
 
@@ -131,7 +132,7 @@ class PaymentService
 
             $payment = null;
 
-            if ($this->checkSignature($json_data, $headers)) {
+            if ($this->checkSignature($raw_body, $headers)) {
                 $this->logger->debug(__METHOD__ . ":  " . "Signature valid; taking payment from message");
                 $payment = $this->settingsHelper->sanitizeRecursively(json_decode(json_encode($data['data'])));
             } else {
