@@ -199,27 +199,24 @@ class PaymentService
     public function checkSignature(string $signedData, array $headers): bool
     {
         if (
-            !isset($headers['signature-secret-id']) ||
-            !isset($headers['signature']) ||
-            !isset($headers['signature-method']) ||
-            !isset($headers['signature-algo'])
+            empty($headers['signature-secret-id']) ||
+            empty($headers['signature']) ||
+            empty($headers['signature-method']) ||
+            empty($headers['signature-algo'])
         ) {
             return false;
         }
 
-        $generatedSignature = null;
+        $generatedSignature = match (strtolower($headers['signature-method'])) {
+            'hmac' => hash_hmac(
+                strtolower($headers['signature-algo']),
+                $signedData,
+                get_option($this->settingsHelper->getSettingId('webhook_secret')) ?? ''
+            ),
+            default => null
+        };
 
-        switch ($headers['signature-method']) {
-            case 'HMAC':
-                $generatedSignature = hash_hmac(
-                    strtolower($headers['signature-algo']),
-                    $signedData,
-                    get_option($this->settingsHelper->getSettingId('webhook_secret')) ?? ''
-                );
-                break;
-        }
-
-        return $headers['signature'] === $generatedSignature;
+        return $generatedSignature && hash_equals($headers['signature'], $generatedSignature);
     }
 
     public function paymentBrandName($brandKey)
