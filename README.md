@@ -24,7 +24,6 @@ International payment methods:
 
 Local payment methods
 
-- SOFORT Banking (EU)
 - Trustly (EU)
 - Payconiq (Luxembourg, Belgium)
 - iDEAL (Netherlands)
