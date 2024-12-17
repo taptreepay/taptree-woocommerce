@@ -51,6 +51,12 @@ class PaymentService
         add_action('taptree_order_WOO_STATUS_CANCELLED', 'wc_maybe_increase_stock_levels');
     }
 
+    private function respondAndLog(int $statusCode, string $message, array $context = []): void
+    {
+        $this->httpResponse->setHttpResponseCode($statusCode);
+        $this->logger->debug(__METHOD__ . " | " . $message, $context);
+    }
+
     public function setGateway($gateway, $api)
     {
         $this->gateway = $gateway;
@@ -78,21 +84,18 @@ class PaymentService
 
             // Webhook test by TapTree
             if (isset($data['testedByTapTree'])) {
-                $this->httpResponse->setHttpResponseCode(200);
-                $this->logger->debug(__METHOD__ . ' | Webhook tested by TapTree.', [true]);
+                $this->respondAndLog(200, 'Webhook tested by TapTree.', [true]);
                 return;
             }
 
             if (empty($get_data['order_id']) || empty($get_data['key'])) {
-                $this->httpResponse->setHttpResponseCode(400);
-                $this->logger->debug(__METHOD__ . ":  No order ID or order key provided.");
+                $this->respondAndLog(400, 'No order ID or order key provided.');
                 return;
             }
 
             // Check whether a payment id has been provided in the call
             if (empty($data['data']['id'])) {
-                $this->httpResponse->setHttpResponseCode(400);
-                $this->logger->debug(__METHOD__ . ' | No payment object ID provided.', [true]);
+                $this->respondAndLog(400, 'No payment object ID provided.', [true]);
                 return;
             }
 
@@ -101,14 +104,12 @@ class PaymentService
             $order = wc_get_order($order_id);
 
             if (!$order) {
-                $this->httpResponse->setHttpResponseCode(404);
-                $this->logger->debug(__METHOD__ . ":  Could not find order $order_id.");
+                $this->respondAndLog(404, "Could not find order $order_id.");
                 return;
             }
 
             if (!$order->key_is_valid($key)) {
-                $this->httpResponse->setHttpResponseCode(401);
-                $this->logger->debug(__METHOD__ . ":  Invalid key $key for order $order_id.");
+                $this->respondAndLog(401, "Invalid key $key for order $order_id.");
                 return;
             }
 
@@ -125,8 +126,7 @@ class PaymentService
             $paymentId = isset($data['data']['id']) ? sanitize_text_field($data['data']['id']) : null;
 
             if (empty($paymentId)) {
-                $this->httpResponse->setHttpResponseCode(400);
-                $this->logger->debug(__METHOD__ . ' | No payment ID provided in the data object.', [true]);
+                $this->respondAndLog(400, 'No payment ID provided in the data object.', [true]);
                 return;
             }
 
@@ -145,14 +145,12 @@ class PaymentService
             // Payment not found
             if (!$payment) {
                 // obfuscate the error message, i.e. do not tell the user that the payment was not found
-                $this->httpResponse->setHttpResponseCode(200);
-                $this->logger->debug(__METHOD__ . " | No payment $paymentId found.", [true]);
+                $this->respondAndLog(200, 'No payment $paymentId found.', [true]);
                 return;
             }
 
             if ($order_id != $payment->metadata->order_id) {
-                $this->httpResponse->setHttpResponseCode(400);
-                $this->logger->debug(__METHOD__ . " | Order ID $order_id does not match order ID in payment metadata {$payment->metadata->order_id}.", [true]);
+                $this->respondAndLog(400, "Order ID $order_id does not match order ID in payment metadata {$payment->metadata->order_id}.", [true]);
                 return;
             }
 
@@ -163,9 +161,7 @@ class PaymentService
 
             // Check whether the order has already been paid and don't process the payment again
             if ($this->gateway->isOrderPaid($order)) {
-                $this->httpResponse->setHttpResponseCode(200);
-                $this->logger->debug(__METHOD__ . " | Order $order_id is already paid and does not need an additional payment by TapTree", [true]);
-
+                $this->respondAndLog(200, "Order $order_id is already paid and does not need an additional payment by TapTree", [true]);
                 // TODO: Process refunds only by webhook to make sure that they have been processed by TapTree
                 return;
             }
@@ -186,12 +182,7 @@ class PaymentService
                 ));
             }
         } catch (\Exception $e) {
-            $this->logger->debug(__METHOD__ . ': exception: ' . $e->getMessage());
-            $this->httpResponse->setHttpResponseCode(500);
-            return;
-        } catch (Exception $e) {
-            $this->logger->debug(__METHOD__ . ': exception: ' . $e->getMessage());
-            $this->httpResponse->setHttpResponseCode(500);
+            $this->respondAndLog(500, 'An error occurred while processing the webhook: ' . $e->getMessage());
             return;
         }
     }
