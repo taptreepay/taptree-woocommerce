@@ -90,7 +90,7 @@ class GatewayModule implements ServiceModule, ExecutableModule
         assert($settingsHelper instanceof SettingsHelper);
 
         $paymentMethods = [];
-        $allPaymentMethodsIds = ['card', 'paypal', 'sofort', 'giropay', 'eps', 'alipay', 'wechat', 'ideal', 'payconiq', 'paysafecard', 'przelewy', 'riverty', 'sepa_direct_debit', 'trustly', 'spraypay', 'in3', 'blik'];
+        $allPaymentMethodsIds = ['card', 'paypal', 'eps', 'wechat', 'ideal', 'payconiq', 'paysafecard', 'przelewy', 'riverty', 'sepa_direct_debit', 'trustly', 'in3', 'blik'];
         foreach ($allPaymentMethodsIds as $paymentMethodId) {
             $paymentMethods[$paymentMethodId] = $this->buildPaymentMethod(
                 $paymentMethodId,
