@@ -233,8 +233,6 @@ class PaymentService
             'unionpay' => 'UnionPay',
             'maestro' => 'Maestro',
             'paypal' => 'PayPal',
-            'sofort' => 'Sofort',
-            'giropay' => 'Giropay',
             'applepay' => 'Apple Pay',
             'googlepay' => 'Google Pay'
         );
