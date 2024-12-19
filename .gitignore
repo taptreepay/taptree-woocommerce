@@ -28,7 +28,6 @@ scripts/release.js
 
 # Git configuration files
 .git/
-.github/
 .gitignore
 
 composer.lock
