@@ -33,3 +33,5 @@ scripts/release.js
 composer.lock
 package-lock.json
 .env
+
+taptree-payments-for-woocommerce.pot
