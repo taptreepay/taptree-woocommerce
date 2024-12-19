@@ -1,7 +1,22 @@
-/.wordpress-org
-/.git
-/.github
-/node_modules
-
-.distignore
+# Ignore Git-related files and directories
+.git/
+.github/
+.wordpress-org/
 .gitignore
+
+
+# Temporary and build files
+assets/js/*.hot-update.js
+assets/js/*.hot-update.json
+
+# Exclude development and non-production directories
+client/
+scripts/
+node_modules/
+
+# Exclude specific files
+package-lock.json
+package.json
+webpack.config.js
+.babelrc
+.distignore

@@ -1,0 +1,36 @@
+{
+  "name": "taptree-payments-for-woocommerce",
+  "version": "2.0.4",
+  "description": "TapTree Payments integration for WooCommerce",
+  "main": "taptree-payments-for-woocommerce.php",
+  "scripts": {
+    "install": "composer install",
+    "sync:version": "node scripts/release.js sync-version",
+    "build": "npm run build:i18n && npm run build:webpack",
+    "build:i18n": "./vendor/bin/wp i18n make-pot . languages/taptree-payments-for-woocommerce.pot --exclude=node_modules,vendor",
+    "build:webpack": "webpack --mode production",
+    "release": "npm run install && node scripts/release.js sync-version && npm run build && composer install --no-dev && node scripts/release.js build-zip",
+    "dev": "webpack --mode development --watch"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "archiver": "^7.0.1",
+    "babel-loader": "^9.2.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "commander": "^11.0.0",
+    "css-loader": "^7.1.2",
+    "del": "^8.0.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "pump": "^3.0.2",
+    "sass": "^1.83.0",
+    "sass-loader": "^16.0.4",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.2",
+    "wp-pot": "^2.0.0"
+  },
+  "author": "Benjamin Behringer",
+  "license": "GPL-3.0-only"
+}
