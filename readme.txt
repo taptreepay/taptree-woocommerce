@@ -1,6 +1,6 @@
 === TapTree Payments for WooCommerce ===
 Contributors: taptree
-Tags: payment, green payment, sustainable payment, sustainability, payments, green payments, sustainable payments, checkout, ecommerce, e-commerce, ecom, e-com
+Tags: payments, sustainability, checkout, woocommerce, credit card
 Requires at least: 6.0
 Tested up to: 6.7.1
 Stable tag: 2.0.5
