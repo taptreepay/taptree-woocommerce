@@ -9,7 +9,15 @@ jobs:
     name: Deploy Release to WordPress.org
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Download the release zip from GitHub
+      # Step 1: Checkout the code (necessary for GitHub Actions to fetch context)
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Install Subversion
+      - name: Install Subversion
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      # Step 3: Download the release zip from GitHub
       - name: Download release zip
         run: |
           LATEST_TAG=$(echo "${GITHUB_REF}" | sed 's|refs/tags/||')
@@ -17,11 +25,11 @@ jobs:
           echo "Downloading release from: $RELEASE_URL"
           curl -L -o release.zip "$RELEASE_URL"
 
-      # Step 2: Extract the zip
+      # Step 4: Extract the zip
       - name: Extract release zip
         run: unzip -q release.zip -d plugin
 
-      # Step 3: Deploy to WordPress.org
+      # Step 5: Deploy to WordPress.org
       - name: WordPress Plugin Deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
         env:
