@@ -1,6 +1,6 @@
 {
   "name": "taptree-payments-for-woocommerce",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "TapTree Payments integration for WooCommerce",
   "main": "taptree-payments-for-woocommerce.php",
   "scripts": {

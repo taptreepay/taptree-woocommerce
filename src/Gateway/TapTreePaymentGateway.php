@@ -129,7 +129,10 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 $this->description = $this->set_payment_description();
             }
 
-            $this->setPaymentMethodIcon();
+
+            // Hook for each taptree gateway on the order-pay page
+            add_action('before_woocommerce_pay_form', [$this, 'handleOrderPayPage']);
+
 
             if (!has_action('woocommerce_thankyou_' . $this->id)) {
                 add_action(
@@ -147,6 +150,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->enabled = 'no';
         }
     }
+
 
     public function getReturnUrl($order, $returnUrl)
     {
@@ -860,6 +864,12 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->setImpactTitle();
     }
 
+    // hook to build up the payment method icon on the order pay page
+    public function handleOrderPayPage()
+    {
+        $this->setImpactTitle();
+    }
+
     private function updateImpactIfTotalsChanged($cart)
     {
         if (is_admin() && !wp_doing_ajax())
@@ -922,10 +932,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         }
     }
 
+
+
     private function setImpactTitle()
     {
         $impactTitle = $this->getImpactTitle();
-
         $this->setPaymentMethodIcon($impactTitle);
     }
 
