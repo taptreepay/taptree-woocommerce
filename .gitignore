@@ -24,7 +24,6 @@ coverage/
 
 # Project-specific files
 .client/
-scripts/release.js
 
 # Git configuration files
 .git/
