@@ -61,6 +61,8 @@ class GatewayModule implements ServiceModule, ExecutableModule
         ];
     }
 
+
+
     public function run(ContainerInterface $container): bool
     {
         $this->pluginId = $container->get('shared.plugin_id');
@@ -79,6 +81,14 @@ class GatewayModule implements ServiceModule, ExecutableModule
 
         // Listen to return URL call
         add_action('template_redirect', array($this, 'tapTreeReturnRedirect'));
+
+        // Inject script on thank-you or order-pay pages
+        add_action('template_redirect', function () {
+            if (is_order_received_page() || is_checkout_pay_page()) {
+                $this->injectModalScript();
+            }
+        });
+
 
         return true;
     }
@@ -153,6 +163,42 @@ class GatewayModule implements ServiceModule, ExecutableModule
         return $gateways;
     }
 
+    protected function injectModalScript(): void
+    {
+        $from_modal = isset($_GET['taptree_from_modal']) ? sanitize_text_field($_GET['taptree_from_modal']) : '';
+        $redirect_url = isset($_GET['taptree_redirect_url']) ? esc_url_raw(urldecode($_GET['taptree_redirect_url'])) : '';
+
+        if ($from_modal === '1') {
+            add_action('wp_footer', function () use ($redirect_url) {
+                echo "
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    try {
+                        // Notify the parent about the redirection
+                        if (window.opener) {
+                            const eventDetail = {
+                                type: 'redirected_to_origin',
+                                redirectUrl: '{$redirect_url}'
+                            };
+
+                            const taptreeEvent = new CustomEvent('taptree_event', { detail: eventDetail });
+                            window.opener.dispatchEvent(taptreeEvent);
+
+                            console.log('Notified parent window about redirection:', eventDetail);
+                        }
+
+                        // Ensures the window.close() happens asynchronously after notifying the parent window. This avoids issues with synchronous operations conflicting with the popup's lifecycle.
+                        setTimeout(() => window.close(), 0);
+                    } catch (err) {
+                        // no logging as we allow cross-origin windows
+                    }
+                });
+            </script>
+            ";
+            });
+        }
+    }
+
     public function tapTreeReturnRedirect()
     {
         if (!isset($_GET['filter_flag']))
@@ -199,8 +245,12 @@ class GatewayModule implements ServiceModule, ExecutableModule
 
         $return_url = $gateway->getOrderRedirectUrl($order);
 
-        // Add utm_nooverride query string
-        $return_url = add_query_arg(['utm_nooverride' => 1], $return_url);
+        // Add utm_nooverride and taptree_from_modal query strings
+        $return_url = add_query_arg([
+            'utm_nooverride' => 1,
+            'taptree_from_modal' => 1,
+            'taptree_redirect_url' => urlencode($return_url),
+        ], $return_url);
 
         $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$return_url}");
 

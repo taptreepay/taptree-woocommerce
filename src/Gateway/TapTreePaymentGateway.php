@@ -118,7 +118,11 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             if ($this->as_redirect === 'no') {
                 $this->standardDescription = __('Mit dieser Zahlungsart kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.');
 
-                $this->initModal();
+                add_action('wp_ajax_taptree_custom_pay_for_order', [$this, 'processPaymentFromPayForOrder']); // For logged-in users
+                add_action('wp_ajax_nopriv_taptree_custom_pay_for_order', [$this, 'processPaymentFromPayForOrder']); // For guests
+                add_action('wp_enqueue_scripts', [$this, 'initModal']); // Load modal script globally
+                add_action('wp_enqueue_scripts', [$this, 'enqueueOrderPayScript']); // Override for order-pay
+                /*$this->initModal();*/
             }
 
             if ($this->paymentMethod->getProp('show_method_description') === 'yes') {
@@ -271,13 +275,131 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public function initModal()
     {
-        wp_enqueue_script(
-            'taptree-checkout-as-modal',
-            plugins_url('js/modal.js', __FILE__),
-            array('jquery'),
-            false,
-            true
-        );
+        if (!wp_script_is('taptree-checkout-modal', 'enqueued')) {
+            wp_enqueue_script(
+                'taptree-checkout-modal',
+                plugins_url('../assets/js/modal.bundle.js', __DIR__),
+                ['jquery'],
+                null,
+                true
+            );
+
+            // Enqueue the modal CSS
+            wp_enqueue_style(
+                'taptree-checkout-modal-styles',
+                plugins_url('../assets/css/modal.css', __DIR__),
+                [],
+                null
+            );
+
+            // Only localize placeholder for the checkout page (no order_id and key)
+            if (is_checkout() && !is_wc_endpoint_url('order-pay')) {
+                wp_localize_script('taptree-checkout-modal', 'taptree_modal_params', [
+                    'checkout_url'        => esc_url(\WC_AJAX::get_endpoint('checkout')), // Default WooCommerce checkout
+                    'custom_checkout_url' => '', // No custom endpoint on checkout page
+                    'order_id'            => '',
+                    'key'                 => '',
+                    'i18n_checkout_error' => __('An error occurred during checkout.', 'woocommerce'),
+                    'security'            => wp_create_nonce('taptree_pay_for_order'),
+                ]);
+            }
+        }
+    }
+
+    public function enqueueOrderPayScript()
+    {
+        if (is_wc_endpoint_url('order-pay')) {
+            global $wp;
+            $order_id = absint($wp->query_vars['order-pay'] ?? 0);
+            $order = wc_get_order($order_id);
+
+            if ($order) {
+                wp_enqueue_script(
+                    'taptree-checkout-modal',
+                    plugins_url('js/modal.js', __FILE__),
+                    ['jquery'],
+                    null,
+                    true
+                );
+
+                wp_localize_script('taptree-checkout-modal', 'taptree_modal_params', [
+                    'checkout_url'        => esc_url(\WC_AJAX::get_endpoint('checkout')), // Default WooCommerce checkout
+                    'custom_checkout_url' => esc_url(\WC_AJAX::get_endpoint('taptree_custom_pay_for_order')), // Custom URL for order-pay
+                    'order_id'            => $order_id,
+                    'key'                 => $order->get_order_key(),
+                    'i18n_checkout_error' => __('An error occurred during checkout.', 'woocommerce'),
+                    'security'            => wp_create_nonce('taptree_pay_for_order'),
+                ]);
+            }
+        }
+    }
+
+    public function processPaymentFromPayForOrder()
+    {
+        // On the order-pay page, we don't have AJAX as in the checkout page
+        // So we need to construct the AJAX response manually
+
+        $this->logger->debug('Custom Hook: AJAX taptree_custom_pay_for_order triggered.');
+
+        try {
+            // Verify nonce for security
+            // TODO: why does it fail?
+            //check_ajax_referer('taptree_pay_for_order', 'security');
+
+            $order_id = absint($_POST['order_id'] ?? 0);
+            $order_key = sanitize_text_field($_POST['key'] ?? '');
+
+            $this->logger->debug("Received Order ID: {$order_id}, Key: {$order_key}");
+
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                $this->logger->error("Order ID {$order_id} not found.");
+                wp_send_json_error([
+                    'result' => 'failure',
+                    'message' => __('Order not found.', 'woocommerce'),
+                    'order_id' => $order_id,
+                ]);
+            }
+
+            if ($order->get_order_key() !== $order_key) {
+                $this->logger->error("Order key mismatch for Order ID {$order_id}.");
+                wp_send_json_error([
+                    'result' => 'failure',
+                    'message' => __('Invalid order key.', 'woocommerce'),
+                    'order_id' => $order_id,
+                ]);
+            }
+
+            $this->logger->debug("Order {$order_id} validated successfully.");
+
+
+            // Generate a new payment intent
+            $this->logger->debug("Generating new payment intent for order {$order_id}.");
+            $result = $this->process_payment($order_id);
+
+            if (!empty($result['redirect'])) {
+                $this->logger->debug("Sending JSON success response.");
+                wp_send_json([
+                    'result' => 'success',
+                    'redirect' => esc_url_raw($result['redirect']),
+                    'order_pay_url' => esc_url_raw($order->get_checkout_payment_url(false)),
+                    'thank_you_url' => esc_url_raw($order->get_checkout_order_received_url()),
+                    'order_id' => $order_id, // Included for consistency with the checkout page
+                ]);
+            } else {
+                $this->logger->error("Failed to generate redirect URL for order {$order_id}.");
+                throw new Exception(__('Failed to generate payment URL.', 'woocommerce'));
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error in processPaymentFromPayForOrder: ' . $e->getMessage());
+            wp_send_json_error([
+                'result' => 'failure',
+                'message' => $e->getMessage(),
+                'order_id' => $order_id,
+            ]);
+        }
+
+        wp_die();
     }
 
     public function isTapTreeAvailable()
@@ -399,8 +521,17 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // get the order
         $order = wc_get_order($order_id);
 
+        // play safe and check if the order exists
         if (!$order) {
             return $this->orderDoesNotExistFailure($order_id);
+        }
+
+        // play safe and check if the order is already completed and thus doesn't require payment
+        if ($order->get_status() === 'completed') {
+            return array(
+                'result' => 'success',
+                'redirect' => $order->get_checkout_order_received_url(),
+            );
         }
 
         $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Awaiting authorization', 'woocommerce'));
@@ -418,6 +549,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             return array(
                 'result' => 'success',
                 'redirect' => $checkoutUrl, // . sprintf("&sr=%s", $order->get_data_store()->get_stock_reduced($order_id)),
+                'order_pay_url' => $order->get_checkout_payment_url(false),
+                'thank_you_url' => $order->get_checkout_order_received_url(),
             );
         } catch (\Exception $e) {
             $this->reportPaymentIntentCreateFailed($order_id, $e);
