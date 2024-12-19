@@ -1,2 +1,36 @@
+# Node modules and logs
+node_modules/
+npm-debug.log*
+
+# Composer vendor directory
+/vendor/
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+
+# Operating system files
 .DS_Store
-kubernetes
+Thumbs.db
+
+# Build artifacts
+*.zip
+/assets/
+
+# Test and coverage files
+/tests/
+coverage/
+
+# Project-specific files
+.client/
+scripts/release.js
+
+# Git configuration files
+.git/
+.github/
+.gitignore
+
+composer.lock
+package-lock.json
+.env
