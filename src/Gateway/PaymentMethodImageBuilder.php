@@ -10,6 +10,8 @@ class PaymentMethodImageBuilder
 {
     public static function set_payment_image(TapTreePaymentGateway $gateway, $impactTitle = null)
     {
+        $impactElement = '';
+
         if ($impactTitle && is_string($impactTitle) && !str_starts_with($impactTitle, '0 ')) {
             $formattedImpactTitle = self::formatImpactTitle($impactTitle);
 
@@ -43,8 +45,8 @@ class PaymentMethodImageBuilder
                     border-radius: 6px;
                     padding: 10px;
                     position: absolute;
-                    z-index: 1;
-                    bottom: 120%;
+                    z-index: 9999;
+                    top: 120%; /* Position the tooltip below */
                     left: 50%;
                     transform: translateX(-50%);
                     min-width: 320px;
