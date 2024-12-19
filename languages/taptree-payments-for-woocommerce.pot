@@ -1,0 +1,96 @@
+# Copyright (C) 2024 TapTree
+# This file is distributed under the GPLv3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: TapTree Payments for WooCommerce 2.0.5\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/taptree-payments-for-woocommerce\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-12-19T10:53:40+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0-alpha\n"
+"X-Domain: taptree-payments-for-woocommerce\n"
+
+#. Plugin Name of the plugin
+#: taptree-payments-for-woocommerce.php
+msgid "TapTree Payments for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: taptree-payments-for-woocommerce.php
+msgid "https://github.com/taptreepay/taptree-woocommerce"
+msgstr ""
+
+#. Description of the plugin
+#: taptree-payments-for-woocommerce.php
+msgid "Accept payments and protect the climate in WooCommerce with the official TapTree WooCommerce plugin"
+msgstr ""
+
+#. Author of the plugin
+#: taptree-payments-for-woocommerce.php
+msgid "TapTree"
+msgstr ""
+
+#. Author URI of the plugin
+#: taptree-payments-for-woocommerce.php
+msgid "https://taptree.org/"
+msgstr ""
+
+#: src/Gateway/TapTreePaymentGateway.php:421
+msgid "Unavailable order %s"
+msgstr ""
+
+#: src/Gateway/TapTreePaymentGateway.php:489
+msgid "Customer started "
+msgstr ""
+
+#. translators: Placeholder 1: Payment method title
+#: src/Gateway/TapTreePaymentGateway.php:507
+msgid "Could not create %s payment."
+msgstr ""
+
+#. translators: Placeholder 1: currency, placeholder 2: refunded amount, placeholder 3: optional refund reason, placeholder 4: payment ID, placeholder 5: refund ID
+#: src/Gateway/TapTreePaymentGateway.php:618
+msgid "Refunded %1$s %2$s %3$s - Payment: %4$s, Refund: %5$s"
+msgstr ""
+
+#: src/Gateway/TapTreePaymentGateway.php:815
+msgid "Wir haben noch keinen endgültigen Zahlungsstatus erhalten."
+msgstr ""
+
+#: src/Gateway/TapTreePaymentGateway.php:821
+msgid "Wir haben noch keinen endgültigen Zahlungsstatus erhalten. Sie werden eine E-Mail erhalten, sobald wir eine Bestätigung der Bank erhalten."
+msgstr ""
+
+#. translators: Placeholder 1: payment method
+#: src/Gateway/TapTreePaymentGateway.php:830
+msgid "Payment erfolgreich mit %s.<br/>Mit deiner Zahlung haben wir "
+msgstr ""
+
+#. translators: Placeholder 1: payment method
+#: src/Gateway/TapTreePaymentGateway.php:840
+msgid "Payment erfolgreich mit %s."
+msgstr ""
+
+#: src/Payment/PaymentService.php:178
+msgid "%1$s payment %2$s (%3$s), not processed in WooCommerce."
+msgstr ""
+
+#: src/Payment/PaymentService.php:366
+msgid "Customer canceled "
+msgstr ""
+
+#: src/Payment/PaymentService.php:425
+msgid "Payment expired ("
+msgstr ""
+
+#: src/Payment/PaymentService.php:431
+msgid "Payment ("
+msgstr ""
+
+#: src/Settings/SettingsModule.php:99
+msgid "%1$sTapTree Payments for WooCommerce%2$s Test mode is active, %3$s enable live mode%4$s before going into production."
+msgstr ""
