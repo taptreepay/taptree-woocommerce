@@ -972,6 +972,6 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             return 'Mit dieser Zahlungsart kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.')  . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.';
         }
 
-        return 'Mit diesr Zahlungsart kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.')  . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.';
+        return 'Mit dieser Zahlungsart kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.')  . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.';
     }
 }
