@@ -37,8 +37,6 @@ class ModalManager {
       this.closeModal();
       // Redirect the main window to the received URL
       window.location = redirectUrl;
-
-      this;
     } else {
       console.warn('Unhandled TapTree event or missing redirectUrl.');
     }
@@ -104,7 +102,9 @@ class ModalManager {
    * Sets the timers for modal timeout and interval checks.
    */
   setTimers() {
+    // close the modal after 15 minutes
     this.modalTimeout = setTimeout(() => this.closeModal(), 15 * 60 * 1000);
+    // poll every 500ms to check if the modal is closed
     this.modalInterval = setInterval(() => this.modalHandler(), 500);
   }
 
