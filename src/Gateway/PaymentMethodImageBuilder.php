@@ -54,6 +54,7 @@ class PaymentMethodImageBuilder
                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     font-size: 11px;
                     white-space: normal;
+                    line-height: 1.7;
                     transition: opacity 0.3s, transform 0.3s;
                     overflow-wrap: break-word;
                 ">Deine Zahlung bindet die angegebene Menge CO₂ durch den Schutz alter Wälder in der Eifel – umgesetzt von der Wohllebens Waldakademie und finanziert durch unsere Payment-Partnerin TapTree.</span>
@@ -64,7 +65,10 @@ class PaymentMethodImageBuilder
         $logo = $gateway->paymentMethod->getLogoHTML();
 
         // Return the combined element
-        return $logo . $impactElement;
+        return $impactElement . '<span style="
+            flex-shrink: 0;
+            margin-left: auto;
+        ">' . $logo . '</span>';
     }
 
     private static function formatImpactTitle(string $impactTitle): string

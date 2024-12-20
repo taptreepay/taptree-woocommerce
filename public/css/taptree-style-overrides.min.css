@@ -1,5 +1,30 @@
-.wc_payment_method > label {
-  vertical-align: baseline;
+.wc_payment_method /* [class*=' payment_method_taptree']*/ {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.wc_payment_method /* [class*=' payment_method_taptree']*/ > input {
+  flex-shrink: 0; /* Prevent shrinking */
+  margin-right: 8px; /* Adds space between input and label */
+}
+
+.wc_payment_method /* [class*=' payment_method_taptree']*/ > label {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  margin-bottom: 0.2rem !important;
+  margin-top: 0.2rem;
+  line-height: 2;
+}
+
+.wc_payment_method > .payment_box {
+  display: block;
+  width: 100%; /* Forces it to take the full width */
+  margin-top: 8px; /* Adds spacing */
+  order: 1; /* Pushes it to the next row */
 }
 
 :root {
