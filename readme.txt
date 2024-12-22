@@ -3,7 +3,7 @@ Contributors: taptree
 Tags: payments, sustainability, checkout, woocommerce, credit card
 Requires at least: 6.0
 Tested up to: 6.7.1
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 Requires PHP: 7.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
