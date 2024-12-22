@@ -34,6 +34,14 @@ class FormHandler {
       return; // Ignore non-TapTree payment methods
     }
 
+    // Retrieve the gateways map from localized script
+    const gatewaysMap = taptree_modal_params.gateways || {};
+    const isRedirect = gatewaysMap[paymentMethod];
+
+    if (isRedirect) {
+      return; // Ignore redirect gateways
+    }
+
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();

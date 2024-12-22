@@ -67,7 +67,6 @@ class PaymentService
     {
         // with the hosted checkout there is only one gateway currently, yet this might change
         // and thus we would need to use setGateway based on the order (wc_get_payment_gateway_by_order)
-        $this->logger->debug(__METHOD__ . ":  Gateway " . $this->gateway->id);
         try {
             // simply decode the json data from the request
             $headers = $this->settingsHelper->sanitizeRecursively(array_change_key_case(getallheaders()));
@@ -119,8 +118,10 @@ class PaymentService
                 return;
             }
 
-            // we set the gateway (this is needed as soon as we handle more than one gateway)
+            // we set the gateway (this is explicitly needed as soon as we handle more than one gateway)
             $this->gateway = $gateway;
+            $this->logger->debug(__METHOD__ . ":  Retrieved data for gateway " . $this->gateway->id);
+
 
             // we take the id
             $paymentId = isset($data['data']['id']) ? sanitize_text_field($data['data']['id']) : null;

@@ -82,14 +82,6 @@ class GatewayModule implements ServiceModule, ExecutableModule
         // Listen to return URL call
         add_action('template_redirect', array($this, 'tapTreeReturnRedirect'));
 
-        // Inject script on thank-you or order-pay pages
-        add_action('template_redirect', function () {
-            if (is_order_received_page() || is_checkout_pay_page()) {
-                $this->injectModalScript();
-            }
-        });
-
-
         return true;
     }
 
@@ -163,40 +155,66 @@ class GatewayModule implements ServiceModule, ExecutableModule
         return $gateways;
     }
 
-    protected function injectModalScript(): void
+    private function serveSpinnerPage(string $returnUrl): void
     {
-        $from_modal = isset($_GET['taptree_from_modal']) ? sanitize_text_field($_GET['taptree_from_modal']) : '';
-        $redirect_url = isset($_GET['taptree_redirect_url']) ? esc_url_raw(urldecode($_GET['taptree_redirect_url'])) : '';
+        // Enrich the return URL with additional query arguments
+        $returnUrl = add_query_arg([
+            'utm_nooverride' => 1,
+            'taptree_from_modal' => 1,
+            'taptree_redirect_url' => urlencode($returnUrl),
+        ], $returnUrl);
 
-        if ($from_modal === '1') {
-            add_action('wp_footer', function () use ($redirect_url) {
-                echo "
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    try {
-                        // Notify the parent about the redirection
-                        if (window.opener) {
-                            const eventDetail = {
-                                type: 'redirected_to_origin',
-                                redirectUrl: '{$redirect_url}'
-                            };
-
-                            const taptreeEvent = new CustomEvent('taptree_event', { detail: eventDetail });
-                            window.opener.dispatchEvent(taptreeEvent);
-
-                            console.log('Notified parent window about redirection:', eventDetail);
-                        }
-
-                        // Ensures the window.close() happens asynchronously after notifying the parent window. This avoids issues with synchronous operations conflicting with the popup's lifecycle.
-                        setTimeout(() => window.close(), 0);
-                    } catch (err) {
-                        // no logging as we allow cross-origin windows
-                    }
-                });
-            </script>
-            ";
+        // Output a minimal HTML page with the spinner
+        echo "
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>Loading...</title>
+        <style>
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f9f9f9;
+                font-family: Arial, sans-serif;
+            }
+            #spinner {
+                display: inline-block;
+                width: 40px;
+                height: 40px;
+                border: 4px solid #ccc;
+                border-radius: 50%;
+                border-top-color: #000;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const enrichedUrl = '{$returnUrl}';
+                // Notify the parent window about redirection and close the popup
+                if (window.opener) {
+                    const eventDetail = {
+                        type: 'redirected_to_origin',
+                        redirectUrl: enrichedUrl
+                    };
+                    const taptreeEvent = new CustomEvent('taptree_event', { detail: eventDetail });
+                    window.opener.dispatchEvent(taptreeEvent);
+                }
             });
-        }
+        </script>
+    </head>
+    <body>
+        <div id='spinner'></div>
+    </body>
+    </html>
+    ";
     }
 
     public function tapTreeReturnRedirect()
@@ -207,9 +225,7 @@ class GatewayModule implements ServiceModule, ExecutableModule
         $filterFlag = sanitize_text_field(wp_unslash($_GET['filter_flag']));
         if ($filterFlag !== 'onTapTreeReturn') return;
 
-        $this->logger->debug("");
-        $this->logger->debug("");
-        $this->logger->debug(__METHOD__ . ": need to handle return from TapTree.");
+        $this->logger->debug(__METHOD__ . ": Handle return from TapTree.");
 
         try {
             // strange php that this is in scope outside of the try block
@@ -229,7 +245,6 @@ class GatewayModule implements ServiceModule, ExecutableModule
 
         if (!$gateway) {
             $gatewayName = $order->get_payment_method();
-
             $this->httpResponse->setHttpResponseCode(404);
             $this->logger->debug(
                 __METHOD__ . ":  Could not find gateway {$gatewayName} for order {$orderId}."
@@ -247,14 +262,21 @@ class GatewayModule implements ServiceModule, ExecutableModule
 
         // Add utm_nooverride and taptree_from_modal query strings
         $return_url = add_query_arg([
-            'utm_nooverride' => 1,
-            'taptree_from_modal' => 1,
-            'taptree_redirect_url' => urlencode($return_url),
+            'utm_nooverride' => 1
         ], $return_url);
+
+        if ($gateway->as_redirect === 'yes') {
+            // Redirect for gateways that use redirects
+            $this->logger->debug(__METHOD__ . ": Redirecting for gateway {$gateway->id}, order {$orderId}: {$return_url}");
+            wp_safe_redirect(esc_url_raw($return_url));
+        } else {
+            // Serve spinner page for gateways using modals
+            $this->logger->debug(__METHOD__ . ": Serving spinner page for gateway {$gateway->id}, order {$orderId}.");
+            $this->serveSpinnerPage($return_url);
+        }
 
         $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$return_url}");
 
-        wp_safe_redirect(esc_url_raw($return_url));
         die;
     }
 
