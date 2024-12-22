@@ -126,6 +126,11 @@ class SettingsHelper
         return '';
     }
 
+    public function isDebugEnabled()
+    {
+        return get_option($this->getSettingId('debug'), 'yes') === 'yes';
+    }
+
     public function sanitizeRecursively(mixed $data): mixed
     {
         switch (gettype($data)) {

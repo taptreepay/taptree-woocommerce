@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace TapTree\WooCommerce\Log;
@@ -9,8 +10,9 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface as Logger;
 use Psr\Log\NullLogger;
+use TapTree\WooCommerce\Settings\SettingsHelper;
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if (! defined('ABSPATH')) exit; // Exit if accessed directly
 
 class LogModule implements ServiceModule
 {
@@ -32,7 +34,11 @@ class LogModule implements ServiceModule
         return [
             Logger::class => static function (ContainerInterface $container) use ($source): AbstractLogger {
                 // Todo: provide settings module to maintain the admin interface where we can also enable debugging
-                $debugEnabled = true; //$container->get('settings.IsDebugEnabled');
+                $settingsHelper = $container->get('settings.settings_helper');
+                assert($settingsHelper instanceof SettingsHelper);
+
+                $debugEnabled = $settingsHelper->isDebugEnabled();;
+
                 if ($debugEnabled) {
                     return new WcPsrLoggerAdapter(\wc_get_logger(), $source);
                 }
