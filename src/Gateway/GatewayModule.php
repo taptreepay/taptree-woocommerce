@@ -275,8 +275,6 @@ class GatewayModule implements ServiceModule, ExecutableModule
             $this->serveSpinnerPage($return_url);
         }
 
-        $this->logger->debug(__METHOD__ . ": Redirect url on return order {$gateway->id}, order {$orderId}: {$return_url}");
-
         die;
     }
 

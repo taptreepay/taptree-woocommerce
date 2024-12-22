@@ -162,7 +162,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             'onTapTreeReturn'
         );
         $returnUrl = untrailingslashit($returnUrl);
-        $this->logger->debug(" Order {$orderId} returnUrl: {$returnUrl}", [true]);
+        $this->logger->debug(__METHOD__ . " | Order {$orderId} has returnUrl {$returnUrl}", [true]);
 
         return apply_filters($this->pluginId . '_return_url', $returnUrl, $order);
     }
@@ -180,7 +180,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         );
         $webhookUrl = untrailingslashit($webhookUrl);
 
-        $this->logger->debug(" Order {$orderId} webhookUrl: {$webhookUrl}", [true]);
+        $this->logger->debug(__METHOD__ . " |  Order {$orderId} has webhookUrl: {$webhookUrl}", [true]);
 
         return apply_filters($this->pluginId . '_webhook_url', $webhookUrl, $order);
     }
@@ -419,7 +419,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     protected function reportPaymentIntentCreateSucceeded($paymentIntent, $order_id, $order): void
     {
         $this->logger->debug(
-            'TapTree payment intent ' . $paymentIntent->id . ' (' . $paymentIntent->mode . ') created for order ' . $order_id
+            __METHOD__ .
+                ' | TapTree payment intent ' . $paymentIntent->id . ' (' . $paymentIntent->mode . ') created for order ' . $order_id
         );
         $order->add_order_note(__('Customer started ' . $this->title . ' ' . $paymentIntent->mode . ' mode payment (' . $paymentIntent->id . ').', 'taptree-payments-for-woocommerce'));
 

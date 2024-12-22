@@ -158,7 +158,7 @@ class PaymentService
             $this->gateway->saveTapTreeInfo($order, $payment);
 
             // Log a message that webhook was called with all details provided thus far
-            $this->logger->debug($this->gateway->id . ": Process TapTree {$payment->mode} {$payment->object} object {$payment->id} with status {$payment->status} of order {$order->get_id()}.", [true]);
+            $this->logger->debug(__METHOD__ . ": Processing TapTree's {$payment->mode} {$payment->object} object {$payment->id} with status {$payment->status} of order {$order->get_id()} on gateway {$this->gateway->id}.", [true]);
 
             // Check whether the order has already been paid and don't process the payment again
             if ($this->gateway->isOrderPaid($order)) {
@@ -170,7 +170,7 @@ class PaymentService
             if (method_exists($this, 'handle_payment_status_' . $payment->status)) {
                 call_user_func(array($this, 'handle_payment_status_' . $payment->status), $order, $payment);
             } else {
-                $this->logger->debug($this->gateway->id . ": Couldn't find update method handle_payment_status_" . $payment->status);
+                $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Couldn't find update method handle_payment_status_" . $payment->status);
                 $order->add_order_note(sprintf(
                     /*  param 1: payment method title,
                         param 2: payment status,
@@ -267,13 +267,13 @@ class PaymentService
      */
     private function handle_payment_status_authorized(WC_Order $order, $payment)
     {
-        $this->logger->debug($this->gateway->id . ": Starting process for payment status 'authorized'. ");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Starting process for payment status 'authorized'. ");
 
         $order_id = $payment->metadata->order_id;
         $paymentMethodDetails = $this->getPaymentMethodDetails($payment);
 
         if ($order->has_status(array(TapTreePaymentGateway::WOO_STATUS_PROCESSING, TapTreePaymentGateway::WOO_STATUS_COMPLETED))) {
-            $this->logger->debug($this->gateway->id . ": Order is already processing or completed. ");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Order is already processing or completed. ");
             return;
         }
 
@@ -281,16 +281,16 @@ class PaymentService
 
         // Stock might have been already reduced! For instance, if the capture failed before.
         if (!$order->get_data_store()->get_stock_reduced($order_id)) {
-            $this->logger->debug($this->gateway->id . ": Starting to reduce stock. ");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Starting to reduce stock. ");
             do_action('taptree_reduce_stock', $order_id);
             $order->add_order_note(__('Stock reduced. Waiting for capture.', 'woocommerce'));
-            $this->logger->debug($this->gateway->id . ": Stock reduced. ");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Stock reduced. ");
         }
 
         // And should be reduced by now
         if (!$order->get_data_store()->get_stock_reduced($order_id)) {
             // Display error for customer that product ran out of stock during checkout. Payment method will not be charged
-            $this->logger->debug($this->gateway->id . ": Stock not reduced. ");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Stock not reduced. ");
             $order->update_status('failed', __('At least one of the products in the order ran out of stock during checkout. The payment method of the customer has NOT been debited yet.', 'woocommerce'));
             return;
         }
@@ -301,25 +301,25 @@ class PaymentService
             $this->logger->debug(__METHOD__ . ":  " . json_encode($capture));
             // tell merchant which amount has been captured/paid.
             $order->add_order_note(__($capture->amount_captured->value . " " . $capture->amount_captured->currency . " captured from customer.", 'woocommerce'));
-            $this->logger->debug($this->gateway->id . ": Payment captured. ");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Payment captured. ");
 
             // we automatically capture the full amount, so this should always be true
             // yet play safe
             if ($capture->total_amount_captured->value === $capture->amount_captured->value) {
-                $this->logger->debug($this->gateway->id . ": Captured full amount. ");
+                $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Captured full amount. ");
                 $this->handle_payment_WOO_STATUS_COMPLETED($order, $payment);
                 return;
             }
 
             $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Payment partially captured.', 'woocommerce'));
         } catch (\Exception $e) {
-            $this->logger->debug($this->gateway->id . ": Capture failed with error: " . $e->getMessage());
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Capture failed with error: " . $e->getMessage());
             $order->add_order_note(__('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
             $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
             $this->httpResponse->setHttpResponseCode(500);
             return new WP_Error('taptree_capture_failed', $e->get_message());
         } catch (Exception $e) {
-            $this->logger->debug($this->gateway->id . ": Capture failed with error: " . $e->getMessage());
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Capture failed with error: " . $e->getMessage());
             $order->add_order_note(__('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
             $order->update_status(TapTreePaymentGateway::WOO_STATUS_PENDING, __('Capture failed. Next attempt might be scheduled.', 'woocommerce'));
             $this->httpResponse->setHttpResponseCode(500);
@@ -329,24 +329,24 @@ class PaymentService
 
     private function handle_payment_status_paid(WC_Order $order, $payment)
     {
-        $this->logger->debug($this->gateway->id . ": Starting process for status 'paid'. ");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Starting process for status 'paid'. ");
 
         $order_id = $payment->metadata->order_id;
 
         if ($order->has_status(TapTreePaymentGateway::WOO_STATUS_PROCESSING)) {
-            $this->logger->debug($this->gateway->id . ": Order is already processing.");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Order is already processing.");
             return;
         }
 
         if ($order->has_status(TapTreePaymentGateway::WOO_STATUS_COMPLETED)) {
-            $this->logger->debug($this->gateway->id . ": Order is already completed.");
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Order is already completed.");
             return;
         }
 
         // With standard settings we should never reach this point as we capture the payment in Woo manually.
         $order->add_order_note(__('Payment paid, reducing stock', 'woocommerce'));
         do_action('taptree_reduce_stock', $order_id);
-        $this->logger->debug($this->gateway->id . ": Stock reduced. ");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Stock reduced. ");
 
         $is_stock_reduced = $order->get_data_store()->get_stock_reduced($order_id);
 
@@ -363,7 +363,7 @@ class PaymentService
 
     private function handle_payment_status_canceled(WC_Order $order, $payment)
     {
-        $this->logger->debug($this->gateway->id . ": Payment " . $payment->id . " canceled.");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Payment " . $payment->id . " canceled.");
         $order->add_order_note(__('Customer canceled ' . $this->gateway->title . ' ' . $payment->mode . ' mode payment (' . $payment->id . ').', 'taptree-payments-for-woocommerce'));
 
         $order_id = $order->get_id();
@@ -387,7 +387,7 @@ class PaymentService
 
     private function handle_payment_status_failed(WC_Order $order, $payment)
     {
-        $this->logger->debug($this->gateway->id . ": Payment " . $payment->id . " failed.");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Payment " . $payment->id . " failed.");
         $orderId = $order->get_id();
 
         // Add messages to log
@@ -412,11 +412,11 @@ class PaymentService
         $taptreePaymentFromMeta = $order->get_meta('_taptree_payment', true);
         $taptreePaymentIdFromMeta = $taptreePaymentFromMeta->id;
 
-        $this->logger->debug($this->gateway->id . ": Starting process for status 'expired' for order " . $order_id);
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Starting process for status 'expired' for order " . $order_id);
 
         // Already paid?
         if (!$order->needs_payment()) {
-            $this->logger->debug($this->gateway->id . ": Expiry not processed because the order is already paid." . $order_id);
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Expiry not processed because the order is already paid." . $order_id);
             return;
         }
 
@@ -435,7 +435,7 @@ class PaymentService
     private function handle_payment_status_partially_captured(WC_Order $order, $payment)
     {
         // should not happen because we only capture the full amount currently
-        $this->logger->debug($this->gateway->id . ": Payment " . $payment->id . " partially captured.");
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Payment " . $payment->id . " partially captured.");
     }
 
     /**
