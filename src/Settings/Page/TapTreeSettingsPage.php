@@ -245,6 +245,12 @@ class TapTreeSettingsPage extends WC_Settings_Page
                 'desc' => __('Your webhook secret can be found in your TapTree dashboard. If you do not provide a webhook secret an additional API call is performed.', 'woocommerce'),
             ],
             [
+                'id' => $this->settingsHelper->getSettingId('debug'),
+                'title' => __('Debug-Logs', 'woocommerce'),
+                'type' => 'checkbox',
+                'desc' => __('Speichere Log-Events des Plugins für Debugging.', 'woocommerce'),
+            ],
+            [
                 'id' => '',
                 'type' => 'sectionend'
             ],

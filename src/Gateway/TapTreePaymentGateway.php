@@ -951,18 +951,18 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         return __(null, 'taptree-payments-for-woocommerce');
     }
 
+
+
     public function set_payment_description($description = "")
     {
-        // If we have a description, use it
-        if ($description != "") return $description;
-        if ($this->show_impact === 'no') return $this->standardDescription;
-        $currentImpact = $this->getImpact();
-        if (!$currentImpact) return $this->standardDescription;
-
-        if ($this->as_redirect === 'no') {
-            return 'Mit dieser Zahlungsart kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.')  . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.';
+        // Use a custom description if provided
+        if (!empty($description)) {
+            return $description;
         }
 
-        return 'Mit dieser Zahlungsart kostenlos und ohne Anmeldung zusätzlich bis zu <b>' . number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.')  . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit . ' </b> aus der Atmosphäre entfernen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.';
+        // Delegate to the payment method for description generation
+        $generatedDescription = $this->paymentMethod->getFormattedDescription();
+
+        return $generatedDescription;
     }
 }
