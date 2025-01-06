@@ -1,6 +1,7 @@
 const path = require('path');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const RemoveEmptyScriptsPlugin = require('webpack-remove-empty-scripts');
 const webpack = require('webpack');
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -9,11 +10,17 @@ module.exports = {
   mode: isProduction ? 'production' : 'development',
 
   entry: {
-    modal: ['./client/js/modal/modal.js', './client/scss/modal/modal.scss'],
+    common: ['./client/scss/common.scss'],
+    modal: ['./client/js/modal/modal.js', './client/scss/modal.scss'],
   },
 
   output: {
-    filename: '[name].bundle.js',
+    filename: (pathData) => {
+      if (pathData.chunk.name === 'common') {
+        return '[name].js';
+      }
+      return '[name].bundle.js';
+    },
     path: path.resolve(__dirname, 'assets/js'),
     publicPath:
       '/wp-content/plugins/taptree-payments-for-woocommerce/assets/js/',
@@ -36,13 +43,21 @@ module.exports = {
           'sass-loader', // Compiles SCSS to CSS
         ],
       },
+      {
+        test: /\.scss$/,
+        issuer: /\.scss$/, // Only apply this for SCSS-only entries
+        use: 'ignore-loader', // Ignore JS generation for SCSS-only entries
+      },
     ],
   },
 
   plugins: [
+    new RemoveEmptyScriptsPlugin(),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
-      filename: '../css/modal.css', // Outputs modal.css for the modal bundle
+      filename: (pathData) => {
+        return '../css/[name].css';
+      },
     }),
     new webpack.ProvidePlugin({
       $: 'jquery',
@@ -54,6 +69,8 @@ module.exports = {
     jquery: 'jQuery',
   },
 
+  // Sourcemaps have no performance impact in production.
+  // They are only downloaded if the browser's DevTools are open.
   devtool: isProduction ? 'source-map' : 'inline-source-map',
 
   watchOptions: {

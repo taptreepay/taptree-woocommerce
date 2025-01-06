@@ -1,4 +1,4 @@
-.spinner-wrapper {
+.taptree-spinner-wrapper {
   position: absolute;
   top: 0;
   left: 0;
@@ -7,7 +7,7 @@
   background-color: #fff;
 }
 
-.spinner-content {
+.taptree-spinner-content {
   position: absolute;
   top: 38.2%;
   left: 50%;
@@ -18,7 +18,7 @@
   align-items: center;
 }
 
-.spinner-circle {
+.taptree-spinner-circle {
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-top: 4px solid #000;
   border-radius: 50%;
@@ -27,7 +27,7 @@
   animation: spin 1s linear infinite;
 }
 
-.spinner-line {
+.taptree-spinner-line {
   text-align: center;
   font-size: 16px;
   color: #333;

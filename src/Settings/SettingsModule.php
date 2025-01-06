@@ -51,7 +51,7 @@ class SettingsModule implements ServiceModule, ExecutableModule
         assert($this->settingsHelper instanceof SettingsHelper);
         $this->api = $container->get('Api.taptree_api');
         assert($this->api instanceof TapTreeApi);
-        wp_enqueue_style('taptree-style-overrides');
+        wp_enqueue_style('taptree-common');
 
         add_filter('plugin_action_links_' . $pluginBasename, [$this, 'addSettingsLinkToPluginPage']);
 

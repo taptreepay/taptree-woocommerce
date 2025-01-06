@@ -133,7 +133,7 @@ class GatewayModule implements ServiceModule, ExecutableModule
         $paymentService = $container->get(PaymentService::class);
         assert($paymentService instanceof PaymentService);
         //$logger->debug(__METHOD__);
-        wp_enqueue_style('taptree-style-overrides');
+        wp_enqueue_style('taptree-common');
 
         $availablePaymentMethodsIds = $settingsHelper->getAvailablePaymentMethodsIds();
         $gateways = [];

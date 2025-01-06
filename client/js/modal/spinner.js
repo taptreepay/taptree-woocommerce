@@ -6,16 +6,16 @@ class AnimatedSpinner {
 
   createSpinner() {
     const wrapper = document.createElement('div');
-    wrapper.className = 'spinner-wrapper';
+    wrapper.className = 'taptree-spinner-wrapper';
 
     const content = document.createElement('div');
-    content.className = 'spinner-content';
+    content.className = 'taptree-spinner-content';
 
     const circle = document.createElement('div');
-    circle.className = 'spinner-circle';
+    circle.className = 'taptree-spinner-circle';
 
     const line = document.createElement('div');
-    line.className = 'spinner-line';
+    line.className = 'taptree-spinner-line';
     line.textContent = this.lines[0];
 
     content.appendChild(circle);
