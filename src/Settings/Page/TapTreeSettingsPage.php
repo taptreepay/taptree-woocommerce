@@ -34,18 +34,20 @@ class TapTreeSettingsPage extends WC_Settings_Page
     public function __construct(TapTreeApi $api, SettingsHelper $settingsHelper, array $paymentGateways, array $paymentMethods)
     {
         $this->id = 'taptree_settings';
-        $this->label = __('TapTree Settings', 'woocommerce');
+        $this->label = __('TapTree-Einstellungen', 'woocommerce');
         $this->api = $api;
         $this->settingsHelper = $settingsHelper;
         $this->paymentGateways = $paymentGateways;
         $this->paymentMethods = $paymentMethods;
         $this->needToRefresh = false;
+
+
+
         add_action(
             'woocommerce_sections_' . $this->id,
             [$this, 'output_sections']
         );
         add_action('woocommerce_admin_field_api_key', [$this, 'generate_api_key_html']);
-
         add_action('woocommerce_settings_saved', [$this, 'toggle_need_to_refresh']);
 
         if ($_POST['refresh_payment_methods'] === 'yes') {
@@ -75,7 +77,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
         return apply_filters(
             'woocommerce_get_settings_' . $this->id,
             $globalTapTreeSettings,
-            $currentSection
+            $current_section
         );
     }
 
@@ -90,6 +92,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
         $this->api->validateApiKeys($values);
     }
 
+
     public function getGlobalSettingsFields()
     {
         $availableMethodsIds =  $this->settingsHelper->getAvailablePaymentMethodsIds();
@@ -98,10 +101,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
 
         if (count($availableMethodsIds)) {
             $paymentMethodsSection =
-                '<div style="background: #fff; padding: 15px;">'
-                . '<div style="margin: 0 0 10px 0; font-weight: 600;">'
-                . __('Edit the settings of the payment methods activated in your account by clicking on edit.', 'woocommerce')
-                . __(' To activate more payment methods in your TapTree dashboard simply click activate.', 'woocommerce')
+                '<div style="background: #fff; padding: 15px;">' . '<div style="margin: 0 0 10px 0; font-weight: 600;">'
                 . '</div>';
 
             $paymentMethodsImagesHTML = '';
@@ -112,12 +112,12 @@ class TapTreeSettingsPage extends WC_Settings_Page
 
             $paymentMethodsSection .= (
                 $this->needToRefresh ?
-                'color: #d63638;">' . __('Your settings changed. Please refresh:') :
-                '">' . __('The payment settings in your TapTree dashboard changed? Please refresh:')
+                'color: #d63638;">' . __('Deine Einstellungen haben sich geändert.<br>Bitte aktualisiere hier, um die Änderung zu sehen:', 'woocommerce') :
+                '">' . __('Die Zahlungseinstellungen in deinem TapTree-Dashboard haben sich geändert?<br>Bitte aktualisiere hier, um die Änderung und weitere Zahlmethoden zu sehen:')
             ) . '&emsp;';
 
 
-            $paymentMethodsSection .= '<button id="hidden_save" name="save" type="submit" value="Save changes" hidden style="display: none"></button>'
+            $paymentMethodsSection .= '<button id="hidden_save" name="save" type="submit" value="Änderungen speichern" hidden style="display: none"></button>'
                 . '<button name="refresh_payment_methods" '
                 . 'value="yes" '
                 . 'type="submit" '
@@ -129,15 +129,15 @@ class TapTreeSettingsPage extends WC_Settings_Page
                 . 'text-decoration: none;'
                 . 'border: solid 1px #2271b1;'
                 . 'border-radius: 4px;">'
-                . __('refresh', 'woocommerce')
+                . __('aktualisieren', 'woocommerce')
                 . '</button>'
-                . '</div>';
+                . '</div><p>&nbsp;</p>';
 
             if (!$this->needToRefresh) {
                 $count = 0;
                 foreach ($this->paymentMethods as $id => $paymentMethod) {
                     $gridItemContent =
-                        '<div class="flexbox" style="column-gap: 10px;">'
+                        '<div class="taptree-flexbox" style="column-gap: 10px;">'
                         . str_replace(
                             'margin: -2px 0 0 0;',
                             'margin: 0;',
@@ -155,7 +155,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
                             . 'text-decoration: none;'
                             . 'border: solid 1px #00a32a;'
                             . 'border-radius: 4px;">'
-                            . __('edit', 'woocommerce')
+                            . __('verwalten', 'woocommerce')
                             . '</a>';
                     } else {
                         $gridItemContent .=
@@ -165,12 +165,12 @@ class TapTreeSettingsPage extends WC_Settings_Page
                             . 'text-decoration: none;'
                             . 'border: solid 1px #aaa;'
                             . 'border-radius: 4px;">'
-                            . __('activate', 'woocommerce')
+                            . __('aktivieren', 'woocommerce')
                             . '</a>';
                     }
 
                     $gridItemHTML =
-                        '<div class="responsive-grid-item">'
+                        '<div class="taptree-responsive-grid-item">'
                         . $gridItemContent
                         . '</div>';
 
@@ -183,72 +183,83 @@ class TapTreeSettingsPage extends WC_Settings_Page
             }
 
             if ($paymentMethodsImagesHTML) {
-                $paymentMethodsSection .=  '<div class="responsive-grid-container">' . $paymentMethodsImagesHTML . '</div></div>';
+                $paymentMethodsSection .=  '<div class="taptree-responsive-grid-container">' . $paymentMethodsImagesHTML . '</div><br><br></div>';
             } else {
-                $paymentMethodsSection .= '</div>';
+                $paymentMethodsSection .= '</div><br><br>';
             }
         }
 
         $introText = __(
-            'Process payments climate-friendly and secure with TapTree\'s Hosted Checkout solution.',
+            '<p>Abwickeln von Zahlungen – immer sicher mit der Hosted-Checkout-Lösung von TapTree.<br>',
             'woocommerce'
         );
 
-        $introText .= '<p>' . __(
-            'If you don\'t have a TapTree account yet, please sign up ',
+        $introText .= '' . __(
+            'Falls du noch kein TapTree-Konto hast, melde dich jetzt ',
             'woocommerce'
         ) . '<a href="https://taptree.org/mitmachen">' . __(
-            'here',
+            'hier',
             'woocommerce'
         ) . '</a>' . __(
-            ' and start receiving payment over your TapTree account today',
+            ' an und beginne noch heute, Zahlungen über dein TapTree-Konto zu empfangen.',
             'woocommerce'
         ) . '</p>';
 
         $globalSettingsFields = [
             [
                 'id' => $this->settingsHelper->getSettingId('title'),
-                'title' => __('TapTree Settings', 'woocommerce'),
+                'title' => __('TapTree-Einstellungen', 'woocommerce'),
                 'type' => 'title',
-                'desc' => $paymentMethodsSection . '<div style="padding:0 0 0 10px"><p>' . $introText . '</p>'
-                    . '<p>' . __(
-                        'To use the payment methods activated in your TapTree account the following settings are required and shared by all TapTree payment methods.',
-                        'woocommerce'
-                    ) . '</p>',
+                'desc' => '<div style="padding:0 0 0 10px"><p>' . $introText . '</p>' . $paymentMethodsSection
+                    . '<p>&nbsp;</p><h3>' . __('Zugangsdaten', 'woocommerce') . '</h3>'
+                    . '<p>' . __('Diese Einstellungen gelten für alle in deinem TapTree-Konto aktivierten Zahlungsmethoden.', 'woocommerce') . '</p>',
+            ],
+            [
+                'id'       => $this->settingsHelper->getSettingId('live_mode'),
+                'title'    => __('Live-Modus', 'woocommerce'),
+                'type'     => 'checkbox',
+                'label'    => __('Live-Modus', 'woocommerce'),
+                'desc'     => wp_kses_post(
+                    '<br><b style="color: #00a32a;">Mit Häckchen</b>: Kostenpflichtige echte Zahlungen mit Auszahlungen auf dein Bankkonto.<br>'
+                        . '<b style="color: #d63638;">Ohne Häckchen</b>: Kostenlose Testzahlungen ohne Auszahlungen auf dein Bankkonto.<br>'
+                        . '<b>Achtung</b>: Live-Zahlungen werden nur verarbeitet, wenn du einen gültigen TapTree-Live-API-Schlüssel eingetragen hast.<br>'
+                ),
+                'default'  => 'yes'
+            ],
+            [
+                'id'       => $this->settingsHelper->getSettingId('api_key_live'),
+                'title'    => __('Live-API-Schlüssel', 'woocommerce'),
+                'type'     => 'api_key',
+                'input_type' => 'password',
+                'desc'     => wp_kses_post(
+                    'Füge hier deinen <a href="https://my.taptree.org" target="_blank">TapTree-Live-API-Schlüssel</a> ein.<br>Er beginnt mit "live_".'
+
+                ),
             ],
             [
                 'id' => $this->settingsHelper->getSettingId('api_key_test'),
-                'title' => __('Test API Key', 'woocommerce'),
+                'title' => __('Test-API-Schlüssel', 'woocommerce'),
                 'type' => 'api_key',
                 'input_type' => 'password',
-                'desc' => __('Insert your TapTree API test key here. Don\'t have an API key yet? Get one in your TapTree dashboard. Attention: Only use test keys here!', 'woocommerce'),
+                'desc' => __('Füge hier deinen <a href="https://my.taptree.org" target="_blank">TapTree-Test-API-Schlüssel</a> ein.<br>Er beginnt mit "test_".', 'woocommerce'),
             ],
+
+
             [
-                'id' => $this->settingsHelper->getSettingId('api_key_live'),
-                'title' => __('Live API Key', 'woocommerce'),
-                'type' => 'api_key',
-                'input_type' => 'password',
-                'desc' => __('Attention: This key is used to process payments in live mode!', 'woocommerce'),
-            ],
-            [
-                'id' => $this->settingsHelper->getSettingId('live_mode'),
-                'title' => __('Live Mode', 'woocommerce'),
-                'type' => 'checkbox',
-                'label' => __('Live mode', 'woocommerce'),
-                'desc' => __('Check this option for live mode. Attention: Payments are only processed if this option is checked and a valid TapTree API live key is provided. Uncheck the option for testing, free of charge.', 'woocommerce'),
-                'default' => 'no'
-            ],
-            [
-                'id' => $this->settingsHelper->getSettingId('webhook_secret'),
-                'title' => __('Webhook Secret', 'woocommerce'),
-                'type' => 'password',
-                'desc' => __('Your webhook secret can be found in your TapTree dashboard. If you do not provide a webhook secret an additional API call is performed.', 'woocommerce'),
+                'id'       => $this->settingsHelper->getSettingId('webhook_secret'),
+                'title'    => __('Webhook Secret', 'woocommerce'),
+                'type'     => 'password',
+                'desc'     => wp_kses_post(
+                    'Wenn du kein Webhook Secret hinterlegst, muss das Plugin einen zusätzlichen API-Aufruf durchführen, '
+                        . 'was den Checkout-Vorgang geringfügig verzögern kann.'
+                        . '<br>Du findest dein Webhook Secret direkt unter den API-Keys in deinem TapTree-Dashboard.'
+                ),
             ],
             [
                 'id' => $this->settingsHelper->getSettingId('debug'),
                 'title' => __('Debug-Logs', 'woocommerce'),
                 'type' => 'checkbox',
-                'desc' => __('Speichere Log-Events des Plugins für Debugging.', 'woocommerce'),
+                'desc' => __('Speichere Log-Events des Plugins zur Fehleranalyse.', 'woocommerce'),
             ],
             [
                 'id' => '',
@@ -308,11 +319,11 @@ class TapTreeSettingsPage extends WC_Settings_Page
                         if ($is_key_valid === true) {
                             $color = '#00a32a';
                             $validity_indicator = $verified_indicator;
-                            $validity_label = "verified";
+                            $validity_label = "verifiziert";
                         } elseif ($apiKey && strlen($apiKey) !== 0 && $is_key_valid === false) {
                             $color = '#d63638';
                             $validity_indicator = $invalid_indicator;
-                            $validity_label = "invalid";
+                            $validity_label = "nicht valide";
                         }
 
                         if ($validity_label) {
@@ -331,7 +342,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
                         }
                         ?>
                     </div>
-                    <p class="description"><?php echo esc_html($props['desc']); ?></p>
+                    <p class="description"><?php echo wp_kses_post($props['desc']); ?></p>
                 </fieldset>
             </td>
         </tr>
