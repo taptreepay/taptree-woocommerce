@@ -662,15 +662,55 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     {
         $order_id = $order->get_id();
         $hookReturnPaymentStatus = 'success';
+
+        // refresh order from DB to avoid stale meta
+        $order = wc_get_order($order_id);
+
         $returnRedirect = $this->get_return_url($order);
         $failedRedirect = $order->get_checkout_payment_url(false);
 
-        if (!$this->isOrderPaid($order)) {
+        $isPaid = $this->isOrderPaid($order);
+
+        // Extra logic ONLY for redirect:
+        // if Woo doesn't consider it paid *yet*, check our saved TapTree payment object to win the race!
+        if (!$isPaid) {
+            $payment = $order->get_meta('_taptree_payment', true);
+
+            if (is_object($payment) && isset($payment->status)) {
+                if (in_array($payment->status, [
+                    self::TAP_STATUS_PAID,
+                    self::TAP_STATUS_AUTHORIZED,
+                    self::TAP_STATUS_PARTIALLY_CAPTURED,
+                ], true)) {
+                    $this->logger->debug(
+                        __METHOD__ . " | Order {$order_id} treated as paid for redirect based on _taptree_payment status {$payment->status}."
+                    );
+                    $isPaid = true;
+                } else {
+                    $this->logger->debug(
+                        __METHOD__ . " | _taptree_payment present for order {$order_id} but status is {$payment->status}, not treating as paid for redirect."
+                    );
+                }
+            } else {
+                $this->logger->debug(
+                    __METHOD__ . " | No usable _taptree_payment meta for order {$order_id}, falling back to order-pay."
+                );
+            }
+        }
+
+        if (!$isPaid) {
+            $this->logger->debug(
+                __METHOD__ . " | Order {$order_id} not paid according to isOrderPaid() and _taptree_payment, redirecting to order-pay."
+            );
             return $failedRedirect;
         }
+
+        $this->logger->debug(
+            __METHOD__ . " | Order {$order_id} considered paid for redirect, sending customer to thank-you."
+        );
+
         do_action(
-            $this->pluginId . '_customer_return_payment_'
-                . $hookReturnPaymentStatus,
+            $this->pluginId . '_customer_return_payment_' . $hookReturnPaymentStatus,
             $order
         );
 

@@ -451,8 +451,12 @@ class PaymentService
         }
 
         $order->add_order_note(__('Payment completed', 'woocommerce')); // Make consistent with api
+        // plugin marker
+        $this->gateway->setOrderPaidWithTapTree($order);
+        // woo canonical completione
         $order->payment_complete($payment->id);
         $order->update_status(TapTreePaymentGateway::WOO_STATUS_PROCESSING, __('Payment processing captured.', 'woocommerce'));
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Order " . $order->get_id() . " set to completed.");
     }
 
     /**
