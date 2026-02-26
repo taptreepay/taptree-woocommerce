@@ -209,9 +209,16 @@ class PaymentService
             return false;
         }
 
+        $algo = strtolower($headers['signature-algo']);
+        $allowedAlgos = ['sha256', 'sha384', 'sha512'];
+
+        if (!in_array($algo, $allowedAlgos, true)) {
+            return false;
+        }
+
         $generatedSignature = match (strtolower($headers['signature-method'])) {
             'hmac' => hash_hmac(
-                strtolower($headers['signature-algo']),
+                $algo,
                 $signedData,
                 get_option($this->settingsHelper->getSettingId('webhook_secret')) ?? ''
             ),

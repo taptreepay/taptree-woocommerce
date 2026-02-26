@@ -458,9 +458,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // So we need to construct the AJAX response manually
 
         try {
-            // Verify nonce for security
-            // TODO: why does it fail?
-            //check_ajax_referer('taptree_pay_for_order', 'security');
+            check_ajax_referer('taptree_pay_for_order', 'security');
             $order_id = absint($_POST['order_id'] ?? 0);
             $order_key = sanitize_text_field($_POST['key'] ?? '');
             $order = wc_get_order($order_id);
