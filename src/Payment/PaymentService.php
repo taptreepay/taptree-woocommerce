@@ -167,10 +167,20 @@ class PaymentService
                 return;
             }
 
-            if (method_exists($this, 'handle_payment_status_' . $payment->status)) {
-                call_user_func(array($this, 'handle_payment_status_' . $payment->status), $order, $payment);
+            $statusHandlers = [
+                'authorized'         => 'handle_payment_status_authorized',
+                'paid'               => 'handle_payment_status_paid',
+                'canceled'           => 'handle_payment_status_canceled',
+                'failed'             => 'handle_payment_status_failed',
+                'expired'            => 'handle_payment_status_expired',
+                'verify'             => 'handle_payment_status_verify',
+                'partially_captured' => 'handle_payment_status_partially_captured',
+            ];
+
+            if (isset($statusHandlers[$payment->status])) {
+                $this->{$statusHandlers[$payment->status]}($order, $payment);
             } else {
-                $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Couldn't find update method handle_payment_status_" . $payment->status);
+                $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Unknown payment status: " . $payment->status);
                 $order->add_order_note(sprintf(
                     /*  param 1: payment method title,
                         param 2: payment status,
@@ -430,6 +440,27 @@ class PaymentService
         // we don't need to cancel the order, because we let the customer retry the payment and otherwise woocommerce expire the order
         $this->logger->debug(__METHOD__ . ' called for order ' . $order_id . ' and payment ' . $payment->id . '.');
         $order->add_order_note(__('Payment (' . $payment->id . ') expired. No active TapTree payments left.', 'taptree-payments-for-woocommerce'));
+    }
+
+    private function handle_payment_status_verify(WC_Order $order, $payment)
+    {
+        $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Starting process for payment status 'verify'. ");
+
+        if ($order->has_status(array(TapTreePaymentGateway::WOO_STATUS_PROCESSING, TapTreePaymentGateway::WOO_STATUS_COMPLETED))) {
+            $this->logger->debug(__METHOD__ . " | " . $this->gateway->id . ": Order is already processing or completed, skipping verify.");
+            return;
+        }
+
+        $order->add_order_note(sprintf(
+            __('%1$s Zahlung wird manuell verifiziert (%2$s).', 'taptree-payments-for-woocommerce'),
+            $this->gateway->method_title,
+            $payment->id
+        ));
+
+        $order->update_status(
+            TapTreePaymentGateway::WOO_STATUS_ON_HOLD,
+            __('Zahlung zur manuellen Verifizierung markiert.', 'taptree-payments-for-woocommerce')
+        );
     }
 
     private function handle_payment_status_partially_captured(WC_Order $order, $payment)

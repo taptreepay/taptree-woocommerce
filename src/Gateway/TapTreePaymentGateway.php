@@ -39,6 +39,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
     public const TAP_STATUS_PENDING = 'pending';
     public const TAP_STATUS_EXPIRED = 'expired';
     public const TAP_STATUS_PARTIALLY_CAPTURED = 'partially_captured';
+    public const TAP_STATUS_VERIFY = 'verify';
 
     /**
      * @var Logger
@@ -681,6 +682,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                     self::TAP_STATUS_PAID,
                     self::TAP_STATUS_AUTHORIZED,
                     self::TAP_STATUS_PARTIALLY_CAPTURED,
+                    self::TAP_STATUS_VERIFY,
                 ], true)) {
                     $this->logger->debug(
                         __METHOD__ . " | Order {$order_id} treated as paid for redirect based on _taptree_payment status {$payment->status}."
@@ -750,8 +752,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             return true;
         }
 
-        // Check whether the order itself needs payment
-        if (!$order->needs_payment()) {
+        // Check whether the order itself needs payment.
+        // Exclude on-hold: used for verify (manual review) — subsequent paid webhook must still process.
+        if (!$order->needs_payment() && !$order->has_status(self::WOO_STATUS_ON_HOLD)) {
             $this->logger->debug($this->id . ": Order $order_id does not need payment. ");
             return true;
         }
@@ -855,6 +858,18 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 // Message to customer
                 return __(
                     'Wir haben noch keinen endgültigen Zahlungsstatus erhalten. Sie werden eine E-Mail erhalten, sobald wir eine Bestätigung der Bank erhalten.',
+                    'taptree-payments-for-woocommerce'
+                );
+            }
+        } elseif ($payment->status === "verify") {
+            if ($admin_instructions) {
+                return __(
+                    'Die Zahlung wird derzeit manuell verifiziert.',
+                    'taptree-payments-for-woocommerce'
+                );
+            } else {
+                return __(
+                    'Vielen Dank fuer deine Bestellung! Deine Zahlung wird derzeit manuell verifiziert. Du erhaeltst eine E-Mail, sobald die Zahlung bestaetigt wurde.',
                     'taptree-payments-for-woocommerce'
                 );
             }
