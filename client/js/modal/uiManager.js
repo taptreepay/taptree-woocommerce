@@ -1,14 +1,10 @@
 import {Q} from './utils.js';
 
-// Define global text variables
 const TEXT_LOADING_OVERLAY = 'Einen Moment bitte, wir leiten dich weiter.';
-const TEXT_MODAL_READY =
-  'Das sichere TapTree Payments-Bezahlfenster wird nicht angezeigt? Klick hier, um deinen Kauf abzuschließen.';
-const TEXT_CONTINUE = 'Weiter';
 
 /**
- * UIManager Class
- * Handles the display and manipulation of UI elements like blockers and loading overlays.
+ * UIManager
+ * Manages the loading overlay shown while the popup is processing.
  */
 class UIManager {
   constructor() {
@@ -24,8 +20,8 @@ class UIManager {
   }
 
   /**
-   * Displays the loading overlay with an optional message.
-   * @param {string} [message=TEXT_LOADING_OVERLAY] - The message to display.
+   * Shows the loading overlay with a spinner.
+   * @param {string} [message] - Optional custom message.
    */
   showLoadingOverlay(message = TEXT_LOADING_OVERLAY) {
     if (!document.querySelector('#taptree-blocker')) {
@@ -41,23 +37,6 @@ class UIManager {
         </div>
       `);
     }
-  }
-
-  /**
-   * Updates the blocker UI for when the modal is ready.
-   */
-  updateBlockerWhenModalReady() {
-    this.showLoadingOverlay(TEXT_MODAL_READY);
-
-    Q('#taptree-blocker-textbox').appendHTML(`
-      <p id="taptree-blocker-continue-text" style="text-align: center; color: #fff; font-weight: bold; text-decoration: underline;">
-        ${TEXT_CONTINUE}
-      </p>
-    `);
-
-    Q('#taptree-blocker').appendHTML(`
-      <button id="taptree-blocker-focus-button" style="position: fixed; height: 100%; width: 100%; top: 0; left: 0; cursor: pointer; background-color: transparent;" onClick="modalManager.focusModal()"></button>
-    `);
   }
 
   /**

@@ -1,45 +1,63 @@
 /**
  * formHandler.js
- * Manages form submissions, AJAX logic, and interactions with the TapTree Payment modal.
+ *
+ * Manages form submissions and opens the TapTree Checkout popup via zoid.
+ * Fallbacks:
+ *   - Mobile → native form submit (redirect mode)
+ *   - Popup blocked (PopupOpenError) → native form submit (redirect mode)
  */
+
+import {CONTEXT} from '@krakenjs/zoid';
+import {TapTreeCheckout} from './taptreeCheckout.js';
 
 class FormHandler {
   /**
-   * Constructor for FormHandler.
-   * @param {ModalManager} modalManager - Modal manager for handling modal operations.
-   * @param {UIManager} uiManager - UI manager for handling loading overlays and other UI elements.
-   * @param {Object} config - Parameters for checkout and order-pay.
+   * @param {UIManager} uiManager - Handles loading overlay.
+   * @param {Object}    config    - Localized checkout/order params.
    */
-  constructor(modalManager, uiManager, config) {
-    this.modalManager = modalManager;
+  constructor(uiManager, config) {
     this.uiManager = uiManager;
-    this.config = config; // Use shared config
+    this.config = config;
     this.$checkoutForm = jQuery('form.checkout, form#order_review');
+    this.popupInstance = null;
+    this.popupWindow = null;
+    this.fallbackToRedirect = false;
   }
 
-  /**
-   * Initializes the form handler by attaching event listeners.
-   */
   init() {
-    this.$checkoutForm.on('submit', this.handleSubmit.bind(this));
+    // Use capture phase so we fire BEFORE WooCommerce's jQuery submit handler
+    // (jQuery handlers fire in bubble phase). This prevents WooCommerce's
+    // blockUI spinner from flashing before our overlay.
+    const form = this.$checkoutForm[0];
+    if (form) {
+      form.addEventListener('submit', this.handleSubmit.bind(this), true);
+    }
+    this.listenForPostMessage();
   }
 
   /**
-   * Handles form submission and opens the modal for TapTree Payments.
-   * @param {Event} e - The form submission event.
+   * Handles form submission.
+   * Opens a zoid popup on desktop; falls through to native submit on mobile
+   * or when the popup is blocked.
    */
   async handleSubmit(e) {
-    const paymentMethod = this.getPaymentMethod();
-    if (!paymentMethod.startsWith('taptree_wc_gateway_')) {
-      return; // Ignore non-TapTree payment methods
+    // Skip interception if we're in redirect fallback mode
+    if (this.fallbackToRedirect) {
+      return; // Let native submit through
     }
 
-    // Retrieve the gateways map from localized script
-    const gatewaysMap = taptree_modal_params.gateways || {};
-    const isRedirect = gatewaysMap[paymentMethod];
+    const paymentMethod = this.getPaymentMethod();
+    if (!paymentMethod || !paymentMethod.startsWith('taptree_wc_gateway_')) {
+      return; // Not a TapTree gateway — let WooCommerce handle it
+    }
 
-    if (isRedirect) {
-      return; // Ignore redirect gateways
+    const gatewaysMap = taptree_modal_params.gateways || {};
+    if (gatewaysMap[paymentMethod]) {
+      return; // Gateway configured for redirect mode — native submit
+    }
+
+    if (this.isMobile()) {
+      return; // Mobile — native submit (redirect mode)
     }
 
     e.preventDefault();
@@ -49,54 +67,269 @@ class FormHandler {
     const $form = jQuery(e.currentTarget);
 
     if ($form.hasClass('processing')) {
-      return false; // Prevent duplicate processing
+      return false;
     }
 
+    // WooCommerce validation hooks
     if (
-      $form.triggerHandler('checkout_place_order') !== false &&
+      $form.triggerHandler('checkout_place_order') === false ||
       $form.triggerHandler(
-        `checkout_place_order_${this.getPaymentMethod()}`
-      ) !== false
+        `checkout_place_order_${paymentMethod}`
+      ) === false
     ) {
-      $form.addClass('processing');
-      this.blockOnSubmit($form);
+      return false;
+    }
 
-      this.modalManager.attachUnloadEvents();
+    $form.addClass('processing');
+    this.blockOnSubmit($form);
 
-      try {
-        const modalUrl = await this.openModalWindow();
-        await this.handleAjaxSubmission($form, modalUrl);
-      } catch (err) {
-        console.error('Error during form submission:', err);
-      } finally {
-        $form.removeClass('processing');
+    try {
+      await this.openZoidPopup($form);
+    } catch (err) {
+      if (err && err.message && err.message.indexOf('Popup') !== -1) {
+        // Popup was blocked — fall back to native form submit (redirect mode).
+        // Set flag BEFORE submit to prevent handleSubmit from intercepting again.
+        console.warn('[TapTree] Popup blocked, falling back to redirect.');
+        this.releaseUi($form);
+        this.fallbackToRedirect = true;
+        $form.submit();
+        return;
       }
+      console.error('[TapTree] Error during form submission:', err);
+      this.releaseUi($form);
     }
 
     return false;
   }
 
   /**
-   * Blocks the form to prevent multiple submissions and shows a loading overlay.
-   * @param {jQuery} $form - The jQuery form object.
+   * Renders the zoid popup component.
+   * AJAX starts immediately (in parallel with popup opening), not after onReady.
+   * When the child signals ready AND AJAX is done, the popup navigates.
+   */
+  openZoidPopup($form) {
+    return new Promise((resolve, reject) => {
+      let paymentResolved = false;
+
+      // Start AJAX immediately — runs in parallel with popup opening.
+      // By the time the child page loads and calls onReady, AJAX may
+      // already be done, making the navigate near-instant.
+      const paymentPromise = this.createPaymentIntent($form);
+
+      // zoid calls window.open() synchronously inside render() to keep the
+      // user-gesture context (required for popup-unblocking). We intercept
+      // briefly to grab the WindowProxy so we can later poll .closed and
+      // distinguish "user closed the popup" from "popup navigated to an
+      // external domain" (both fire zoid's onClose). Restored in finally{}.
+      const origOpen = window.open;
+      window.open = (...args) => {
+        this.popupWindow = origOpen.apply(window, args);
+        return this.popupWindow;
+      };
+
+      try {
+        const instance = TapTreeCheckout({
+          onReady: (actions) => {
+            // AJAX may already be done — navigate as soon as both are ready.
+            paymentPromise
+              .then((result) => {
+                this.config.orderPayUrl = result.order_pay_url;
+                this.config.thankYouUrl = result.thank_you_url;
+                actions.navigate(result.redirect);
+              })
+              .catch((err) => {
+                console.error('[TapTree] Payment intent failed:', err);
+                paymentResolved = true;
+                this.closePopup();
+                this.submitError(
+                  this.config.i18n_checkout_error ||
+                    'An error occurred during checkout.'
+                );
+                this.releaseUi($form);
+                reject(err);
+              });
+          },
+
+          onPaymentComplete: (redirectUrl) => {
+            paymentResolved = true;
+            this.popupInstance = null;
+            if (!this.isSafeRedirectUrl(redirectUrl)) {
+              this.releaseUi($form);
+              resolve();
+              return;
+            }
+            window.location = redirectUrl;
+            resolve();
+          },
+
+          onPaymentCancel: () => {
+            paymentResolved = true;
+            this.popupInstance = null;
+            this.releaseUi($form);
+            resolve();
+          },
+
+          onError: (err) => {
+            console.error('[TapTree] Payment error from popup:', err);
+            paymentResolved = true;
+            this.popupInstance = null;
+            const target =
+              this.config.orderPayUrl || this.config.checkoutUrl;
+            this.releaseUi($form);
+            window.location = target;
+            resolve();
+          },
+
+          // zoid fires onClose when the child page unloads — including
+          // cross-domain navigations, not only actual window close.
+          // Poll the real window state instead of releasing UI.
+          onClose: () => {
+            if (paymentResolved) {
+              this.popupInstance = null;
+              resolve();
+              return;
+            }
+            this.waitForPopupClose($form, resolve);
+          },
+        });
+
+        this.popupInstance = instance;
+        instance.render('body', CONTEXT.POPUP).catch((err) => {
+          if (err && err.message && err.message.indexOf('Popup') !== -1) {
+            reject(err);
+          }
+        });
+      } catch (err) {
+        reject(err);
+      } finally {
+        window.open = origOpen;
+      }
+    });
+  }
+
+  /**
+   * Closes the popup if it's open.
+   */
+  closePopup() {
+    if (this.popupInstance) {
+      try {
+        this.popupInstance.close();
+      } catch (e) {
+        // Popup may already be closed
+      }
+      this.popupInstance = null;
+    }
+    this.popupWindow = null;
+  }
+
+  /**
+   * Waits for the popup window to actually close, then releases the UI.
+   * zoid fires onClose when the child navigates to an external domain
+   * (e.g. a PSP redirect), but the window itself is still open. This
+   * method polls the standard WindowProxy.closed property to detect
+   * when the user actually closes the popup.
+   */
+  waitForPopupClose($form, resolve) {
+    const win = this.popupWindow;
+
+    if (!win || win.closed) {
+      this.popupInstance = null;
+      this.popupWindow = null;
+      this.releaseUi($form);
+      resolve();
+      return;
+    }
+
+    const poll = setInterval(() => {
+      if (win.closed) {
+        clearInterval(poll);
+        this.popupInstance = null;
+        this.popupWindow = null;
+        this.releaseUi($form);
+        resolve();
+      }
+    }, 500);
+  }
+
+  /**
+   * Listens for postMessage from the spinner page fallback (Layer 2).
+   * If zoid fails and the popup ends up on the merchant's spinner page,
+   * it sends a postMessage with the redirect URL.
+   */
+  listenForPostMessage() {
+    window.addEventListener('message', (event) => {
+      // Only accept messages from our own origin (spinner page is same-origin)
+      if (event.origin !== window.location.origin) return;
+
+      const data = event.data;
+      if (data && data.type === 'taptree_payment_complete' && data.redirectUrl) {
+        if (!this.isSafeRedirectUrl(data.redirectUrl)) return;
+        window.location = data.redirectUrl;
+      }
+    });
+  }
+
+  /**
+   * Creates a payment intent via AJAX.
+   * @param {jQuery} $form
+   * @returns {Promise<Object>} - { redirect, order_pay_url, thank_you_url }
+   */
+  createPaymentIntent($form) {
+    const isOrderPayPage = $form.is('#order_review');
+    const ajaxUrl = isOrderPayPage
+      ? '/wp-admin/admin-ajax.php?action=taptree_custom_pay_for_order'
+      : this.config.checkoutUrl;
+
+    let data = $form.serialize();
+    if (isOrderPayPage) {
+      data += `&order_id=${encodeURIComponent(this.config.order_id)}&key=${encodeURIComponent(this.config.key)}&security=${encodeURIComponent(this.config.security)}`;
+    }
+
+    return jQuery
+      .ajax({
+        type: 'POST',
+        url: ajaxUrl,
+        data: data,
+        dataType: 'json',
+      })
+      .then((result) => {
+        if (result.result === 'success' && result.redirect) {
+          return {
+            redirect: result.redirect,
+            order_pay_url: result.order_pay_url,
+            thank_you_url: result.thank_you_url,
+          };
+        }
+        throw new Error(result.message || 'Invalid response from server');
+      });
+  }
+
+  /**
+   * Blocks the form UI during processing.
    */
   blockOnSubmit($form) {
+    // Show our overlay first so it covers any WooCommerce blockUI spinner.
+    this.uiManager.showLoadingOverlay();
     const isBlocked = $form.data('blockUI.isBlocked');
     if (isBlocked !== 1) {
       $form.block({
         message: null,
-        overlayCSS: {
-          background: '#fff',
-          opacity: 0,
-        },
+        overlayCSS: {background: '#fff', opacity: 0},
       });
     }
-    this.uiManager.showLoadingOverlay();
   }
 
   /**
-   * Retrieves the selected payment method from the form.
-   * @returns {string} - Selected payment method.
+   * Releases the form UI after error or cancel.
+   */
+  releaseUi($form) {
+    $form.removeClass('processing');
+    $form.unblock();
+    this.uiManager.removeLoadingOverlay();
+  }
+
+  /**
+   * Retrieves the selected payment method.
    */
   getPaymentMethod() {
     return this.$checkoutForm
@@ -105,87 +338,48 @@ class FormHandler {
   }
 
   /**
-   * Opens the TapTree Payment modal.
-   * @returns {Promise<string>} - The URL of the opened modal.
+   * Validates a redirect URL is safe (https/http only, no javascript:/data: schemes).
    */
-  async openModalWindow() {
-    const width = 608;
-    const height = (2 * screen.availHeight) / 3;
-    const left = screen.availLeft + (screen.availWidth - width) / 2;
-    const top = screen.availTop + (screen.availHeight - height) / 2;
-
-    this.modalManager.modal = window.open(
-      'https://checkout.taptree.org/lounge',
-      '_blank',
-      `popup, width=${width}, height=${height}, left=${left}, top=${top}`
-    );
-
-    this.modalManager.setTimers();
-    this.uiManager.updateBlockerWhenModalReady();
-
-    return this.modalManager.modal.location.href;
-  }
-
-  /**
-   * Submits the form data via AJAX to WooCommerce backend.
-   * @param {jQuery} $form - The jQuery form object.
-   */
-  async handleAjaxSubmission($form) {
-    const isOrderPayPage = $form.is('#order_review');
-    const ajaxUrl = isOrderPayPage
-      ? '/wp-admin/admin-ajax.php?action=taptree_custom_pay_for_order'
-      : this.config.checkoutUrl;
-
-    let data = $form.serialize();
-    if (isOrderPayPage) {
-      data += `&order_id=${this.config.order_id}&key=${this.config.key}`;
-    }
-
+  isSafeRedirectUrl(url) {
     try {
-      const result = await jQuery.ajax({
-        type: 'POST',
-        url: ajaxUrl,
-        data: data,
-        dataType: 'json',
-      });
-
-      if (result.result === 'success') {
-        this.config.orderPayUrl = result.order_pay_url;
-        this.config.thankYouUrl = result.thank_you_url;
-
-        const redirectUrl = result.redirect.startsWith('https://')
-          ? result.redirect
-          : decodeURI(result.redirect);
-        this.modalManager.modal.location = redirectUrl;
-      } else {
-        throw new Error('Invalid response');
-      }
-    } catch (err) {
-      console.error('Error in handleAjaxSubmission:', err);
-      this.modalManager.closeModal();
-      this.submitError(this.config.i18n_checkout_error);
+      const parsed = new URL(url, window.location.origin);
+      return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+    } catch (e) {
+      return false;
     }
   }
 
   /**
-   * Displays an error on the form if AJAX fails.
-   * @param {string} message - Error message.
+   * Basic mobile detection. On mobile, we skip the popup and let
+   * WooCommerce handle the redirect natively.
+   */
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
+
+  /**
+   * Displays a WooCommerce checkout error.
    */
   submitError(message) {
     jQuery(
       '.woocommerce-NoticeGroup-checkout, .woocommerce-error, .woocommerce-message'
     ).remove();
-    this.$checkoutForm.prepend(`
-      <div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">
-        ${message}
-      </div>
-    `);
-    this.modalManager.releaseUiAndCleanUp();
+    const $notice = jQuery(
+      '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout"></div>'
+    );
+    $notice.text(message);
+    this.$checkoutForm.prepend($notice);
     this.$checkoutForm
       .find('.input-text, select, input:checkbox')
       .trigger('validate')
       .trigger('blur');
-    wc_checkout_form.scroll_to_notices();
+
+    if (typeof wc_checkout_form !== 'undefined' && wc_checkout_form.scroll_to_notices) {
+      wc_checkout_form.scroll_to_notices();
+    }
+
     jQuery(document.body).trigger('checkout_error', [message]);
   }
 }

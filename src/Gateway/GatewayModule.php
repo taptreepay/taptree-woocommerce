@@ -155,68 +155,6 @@ class GatewayModule implements ServiceModule, ExecutableModule
         return $gateways;
     }
 
-    private function serveSpinnerPage(string $returnUrl): void
-    {
-        // Enrich the return URL with additional query arguments
-        $returnUrl = add_query_arg([
-            'utm_nooverride' => 1,
-            'taptree_from_modal' => 1,
-            'taptree_redirect_url' => urlencode($returnUrl),
-        ], $returnUrl);
-
-        // Output a minimal HTML page with the spinner
-        echo "
-    <!DOCTYPE html>
-    <html lang='en'>
-    <head>
-        <meta charset='UTF-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <title>Loading...</title>
-        <style>
-            body {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                margin: 0;
-                background-color: #f9f9f9;
-                font-family: Arial, sans-serif;
-            }
-            #spinner {
-                display: inline-block;
-                width: 40px;
-                height: 40px;
-                border: 4px solid #ccc;
-                border-radius: 50%;
-                border-top-color: #000;
-                animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
-        </style>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const enrichedUrl = '{$returnUrl}';
-                // Notify the parent window about redirection and close the popup
-                if (window.opener) {
-                    const eventDetail = {
-                        type: 'redirected_to_origin',
-                        redirectUrl: enrichedUrl
-                    };
-                    const taptreeEvent = new CustomEvent('taptree_event', { detail: eventDetail });
-                    window.opener.dispatchEvent(taptreeEvent);
-                }
-            });
-        </script>
-    </head>
-    <body>
-        <div id='spinner'></div>
-    </body>
-    </html>
-    ";
-    }
-
     public function tapTreeReturnRedirect()
     {
         if (!isset($_GET['filter_flag']))
@@ -265,15 +203,8 @@ class GatewayModule implements ServiceModule, ExecutableModule
             'utm_nooverride' => 1
         ], $return_url);
 
-        if ($gateway->as_redirect === 'yes') {
-            // Redirect for gateways that use redirects
-            $this->logger->debug(__METHOD__ . ": Redirecting for gateway {$gateway->id}, order {$orderId}: {$return_url}");
-            wp_safe_redirect(esc_url_raw($return_url));
-        } else {
-            // Serve spinner page for gateways using modals
-            $this->logger->debug(__METHOD__ . ": Serving spinner page for gateway {$gateway->id}, order {$orderId}.");
-            $this->serveSpinnerPage($return_url);
-        }
+        $this->logger->debug(__METHOD__ . ": Redirecting for gateway {$gateway->id}, order {$orderId}: {$return_url}");
+        wp_safe_redirect(esc_url_raw($return_url));
 
         die;
     }

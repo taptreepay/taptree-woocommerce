@@ -33,5 +33,8 @@
     "wp-pot": "^2.0.0"
   },
   "author": "Benjamin Behringer",
-  "license": "GPL-3.0-only"
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@krakenjs/zoid": "^10.5.0"
+  }
 }

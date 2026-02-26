@@ -30,7 +30,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules\/(?!@krakenjs)/,
         use: {
           loader: 'babel-loader',
         },
@@ -81,5 +81,14 @@ module.exports = {
 
   resolve: {
     extensions: ['.js', '.scss'],
+    alias: {
+      // Resolve zoid directly to the full build (popup + iframe).
+      // Prevents webpack from bundling both the full and frame-only builds
+      // via the conditional require in zoid's index.js.
+      '@krakenjs/zoid': path.resolve(
+        __dirname,
+        'node_modules/@krakenjs/zoid/dist/zoid.js'
+      ),
+    },
   },
 };
