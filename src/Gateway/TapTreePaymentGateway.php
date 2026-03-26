@@ -925,14 +925,23 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $cart->get_cart();
         $total = $this->getCartTotal($cart);
         $this->impact = WC()->session->get('taptree_impact');
-        if ($this->impact && (strcmp($this->impact->amount->value, $total) === 0)) {
+        if ($this->impact && !is_wp_error($this->impact) && isset($this->impact->amount->value) && (strcmp($this->impact->amount->value, $total) === 0)) {
             return;
         }
         // retrieve the impact from the API
         try {
-            $this->impact = $this->api->get_impact_info($total, false);
+            $result = $this->api->get_impact_info($total, false);
+            if (is_wp_error($result)) {
+                $this->logger->debug(__METHOD__ . " | API error: " . $result->get_error_message());
+                return;
+            }
+            $this->impact = $result;
         } catch (\Exception $e) {
+            $this->logger->debug(__METHOD__ . " | Exception: " . $e->getMessage());
+            return;
         } catch (Exception $e) {
+            $this->logger->debug(__METHOD__ . " | Exception: " . $e->getMessage());
+            return;
         }
 
         // store the impact in the session
