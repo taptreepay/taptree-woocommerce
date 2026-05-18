@@ -92,7 +92,10 @@ class SettingsHelper
             return false;
         }
 
-        if ($keyType === 'test' && $acceptorData->mode === 'test') {
+        // v2 keys report mode "sbx" for sandbox; legacy keys report "test".
+        // Treat both as the test slot for backward compatibility with the
+        // existing 2.1.2 UI ("Test-API-Schlüssel").
+        if ($keyType === 'test' && ($acceptorData->mode === 'test' || $acceptorData->mode === 'sbx')) {
             return true;
         }
 
@@ -116,14 +119,71 @@ class SettingsHelper
         $is_live_key_valid = get_option($this->getSettingId('is_live_key_valid'));
 
         if ($live_mode === 'yes' && $is_live_key_valid) {
-            return get_option($this->getSettingId('api_key_live'));
+            $key = get_option($this->getSettingId('api_key_live'));
+            return $this->rejectIfPublishable($key);
         }
 
         if ($is_test_key_valid) {
-            return get_option($this->getSettingId('api_key_test'));
+            $key = get_option($this->getSettingId('api_key_test'));
+            return $this->rejectIfPublishable($key);
         }
 
         return '';
+    }
+
+    /**
+     * Server-side calls must never use a publishable (scope=pub) v2 key.
+     * Returns the key unchanged for legacy keys and valid v2 private keys;
+     * returns '' otherwise so callers degrade to "no key configured".
+     *
+     * @param string $key
+     * @return string
+     */
+    protected function rejectIfPublishable($key)
+    {
+        if (!function_exists('taptree_parse_api_key')) {
+            return $key;
+        }
+        $parsed = taptree_parse_api_key((string) $key);
+        if ($parsed['format'] === 'v2' && $parsed['scope'] === 'pub') {
+            return '';
+        }
+        return $key;
+    }
+
+    /**
+     * Structural classification of a stored key (no API call).
+     * Returns the same shape as taptree_parse_api_key().
+     *
+     * @param string $key
+     * @return array
+     */
+    public function classifyKey($key)
+    {
+        if (!function_exists('taptree_parse_api_key')) {
+            return [
+                'format' => 'legacy',
+                'env'    => null,
+                'scope'  => null,
+                'valid'  => $key !== '',
+                'reason' => null,
+            ];
+        }
+        return taptree_parse_api_key((string) $key);
+    }
+
+    /**
+     * True when the active key is a v2 sandbox key. Callers can use this to
+     * flag orders as non-live without round-tripping through /acceptor.
+     *
+     * @return bool
+     */
+    public function isSandboxV2Active()
+    {
+        $live_mode = get_option($this->getSettingId('live_mode'));
+        $slot = ($live_mode === 'yes') ? 'api_key_live' : 'api_key_test';
+        $parsed = $this->classifyKey(get_option($this->getSettingId($slot)));
+        return $parsed['format'] === 'v2' && $parsed['env'] === 'sbx';
     }
 
     public function isDebugEnabled()

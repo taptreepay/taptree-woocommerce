@@ -4,7 +4,7 @@
  * Plugin Name:       TapTree Payments for WooCommerce
  * Plugin URI:        https://github.com/taptreepay/taptree-woocommerce
  * Description:       Accept payments and protect the climate in WooCommerce with the official TapTree WooCommerce plugin
- * Version:           2.1.2
+ * Version:           2.1.3
  * Author:            TapTree
  * Author URI:        https://taptree.org/
  * Requires at least: 6.0
@@ -79,6 +79,7 @@ function initialize()
 {
     try {
         require_once __DIR__ . '/include/functions.php';
+        require_once __DIR__ . '/include/api-key-parser.php';
         require_once __DIR__ . '/vendor/autoload.php';
 
         $woo_plugin_path = WC_PLUGIN_FILE;

@@ -257,24 +257,64 @@ class TapTreeApi
 
     $available_payment_methods = null;
 
-    // Validate api keys
+    // Validate api keys — structural pre-flight first (cheap, catches typos
+    // and publishable-key-in-server-slot before we round-trip to /acceptor).
     if ($test_key && strlen($test_key) !== 0) {
-      try {
-        $test_key_acceptor_data = $this->get_acceptor_data($test_key);
-        $is_test_key_valid = $this->settingsHelper->isApiKeyValid($test_key_acceptor_data, 'test');
-      } catch (\Exception $e) {
+      $pre = $this->settingsHelper->classifyKey($test_key);
+      if (!$pre['valid']) {
+        $this->settingsHelper->addUserNotification(
+          sprintf('TapTree Test-API-Schlüssel ist ungültig: %s', $pre['reason']),
+          'error'
+        );
         $test_key_acceptor_data = array();
         $is_test_key_valid = false;
+      } else {
+        // v2 test slot must carry env=sbx; live slot must carry env=live.
+        if ($pre['format'] === 'v2' && $pre['env'] !== 'sbx') {
+          $this->settingsHelper->addUserNotification(
+            'TapTree Test-API-Schlüssel: erwartet env=sbx, gefunden env=' . $pre['env'],
+            'error'
+          );
+          $test_key_acceptor_data = array();
+          $is_test_key_valid = false;
+        } else {
+          try {
+            $test_key_acceptor_data = $this->get_acceptor_data($test_key);
+            $is_test_key_valid = $this->settingsHelper->isApiKeyValid($test_key_acceptor_data, 'test');
+          } catch (\Exception $e) {
+            $test_key_acceptor_data = array();
+            $is_test_key_valid = false;
+          }
+        }
       }
     }
 
     if ($live_key && strlen($live_key) !== 0) {
-      try {
-        $live_key_acceptor_data = $this->get_acceptor_data($live_key);
-        $is_live_key_valid = $this->settingsHelper->isApiKeyValid($live_key_acceptor_data, 'live');
-      } catch (\Exception $e) {
+      $pre = $this->settingsHelper->classifyKey($live_key);
+      if (!$pre['valid']) {
+        $this->settingsHelper->addUserNotification(
+          sprintf('TapTree Live-API-Schlüssel ist ungültig: %s', $pre['reason']),
+          'error'
+        );
         $live_key_acceptor_data = array();
         $is_live_key_valid = false;
+      } else {
+        if ($pre['format'] === 'v2' && $pre['env'] !== 'live') {
+          $this->settingsHelper->addUserNotification(
+            'TapTree Live-API-Schlüssel: erwartet env=live, gefunden env=' . $pre['env'],
+            'error'
+          );
+          $live_key_acceptor_data = array();
+          $is_live_key_valid = false;
+        } else {
+          try {
+            $live_key_acceptor_data = $this->get_acceptor_data($live_key);
+            $is_live_key_valid = $this->settingsHelper->isApiKeyValid($live_key_acceptor_data, 'live');
+          } catch (\Exception $e) {
+            $live_key_acceptor_data = array();
+            $is_live_key_valid = false;
+          }
+        }
       }
     }
 

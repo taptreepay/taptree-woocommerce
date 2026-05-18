@@ -1,6 +1,6 @@
 {
   "name": "taptree-payments-for-woocommerce",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "TapTree Payments integration for WooCommerce",
   "main": "taptree-payments-for-woocommerce.php",
   "scripts": {
@@ -28,7 +28,7 @@
     "style-loader": "^4.0.0",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.2",
+    "webpack-dev-server": "^5.2.3",
     "webpack-remove-empty-scripts": "^1.0.4",
     "wp-pot": "^2.0.0"
   },

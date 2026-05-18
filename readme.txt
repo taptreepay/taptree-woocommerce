@@ -3,7 +3,7 @@ Contributors: taptree
 Tags: payments, sustainability, checkout, woocommerce, credit card
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 Requires PHP: 7.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -56,3 +56,8 @@ Buy Now Pay Later (BNPL)
 3. Display the impact possible for every payment directly in the checkout and increase customer liability and conversion rate.
 4. Our safe and convenient payment popup delivers a frictionless customer experience.
 5. An all-around experience: Payment information and the impact generated are displayed on your thank you page.
+
+== Changelog ==
+
+= 2.1.3 =
+* Support for tt_-prefixed API keys (v2 format) with backward-compat for existing tokens. Adds Sandbox environment detection.

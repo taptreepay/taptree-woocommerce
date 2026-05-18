@@ -51,6 +51,7 @@ class SettingsModule implements ServiceModule, ExecutableModule
         assert($this->settingsHelper instanceof SettingsHelper);
         $this->api = $container->get('Api.taptree_api');
         assert($this->api instanceof TapTreeApi);
+        $pluginVersion = $container->get('shared.plugin_version');
         wp_enqueue_style('taptree-common');
 
         add_filter('plugin_action_links_' . $pluginBasename, [$this, 'addSettingsLinkToPluginPage']);
@@ -62,7 +63,8 @@ class SettingsModule implements ServiceModule, ExecutableModule
                 $this->isTestModeNoticePrinted = true;
             }
         });
-        add_action('admin_init', function () {
+        add_action('admin_init', function () use ($pluginVersion) {
+            $this->maybeShowV2UpgradeNotice($pluginVersion);
             if ($this->isTestModeNoticePrinted) {
                 return;
             }
@@ -85,6 +87,59 @@ class SettingsModule implements ServiceModule, ExecutableModule
         array_unshift($links, $link_html);
 
         return $links;
+    }
+
+    /**
+     * One-shot non-blocking admin notice prompting merchants on 2.1.3 with at
+     * least one legacy (non-tt_) key in storage to rotate to a v2 key. The
+     * notice is shown once per plugin version — we stamp the version into a
+     * dedicated option so re-running the hook is idempotent.
+     */
+    public function maybeShowV2UpgradeNotice(string $pluginVersion)
+    {
+        if (!is_admin()) {
+            return;
+        }
+        $stampOpt = $this->settingsHelper->getSettingId('v2_upgrade_notice_version');
+        $stamped = get_option($stampOpt);
+        if ($stamped === $pluginVersion) {
+            return;
+        }
+
+        $live = (string) get_option($this->settingsHelper->getSettingId('api_key_live'));
+        $test = (string) get_option($this->settingsHelper->getSettingId('api_key_test'));
+
+        $hasLegacy = false;
+        foreach ([$live, $test] as $key) {
+            if ($key === '') {
+                continue;
+            }
+            $parsed = $this->settingsHelper->classifyKey($key);
+            if ($parsed['format'] === 'legacy') {
+                $hasLegacy = true;
+                break;
+            }
+        }
+
+        if (!$hasLegacy) {
+            update_option($stampOpt, $pluginVersion);
+            return;
+        }
+
+        $notice = new AdminNotice();
+        $message = sprintf(
+            esc_html__(
+                '%1$sTapTree Payments for WooCommerce%2$s — Neuer API-Key-Format (v2) verfügbar. Wir empfehlen, deinen Schlüssel im %3$sTapTree-Dashboard%4$s zu erneuern. Bestehende Schlüssel funktionieren weiterhin.',
+                'taptree-payments-for-woocommerce'
+            ),
+            '<strong>',
+            '</strong>',
+            '<a href="https://my.taptree.org/" target="_blank" rel="noopener noreferrer">',
+            '</a>'
+        );
+        $notice->addNotice('notice-info', $message);
+
+        update_option($stampOpt, $pluginVersion);
     }
 
     public function needToShowTestModeNotice()
