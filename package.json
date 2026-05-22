@@ -24,7 +24,7 @@
     "mini-css-extract-plugin": "^2.9.2",
     "pump": "^3.0.2",
     "sass": "^1.83.0",
-    "sass-loader": "^16.0.4",
+    "sass-loader": "^17.0.0",
     "style-loader": "^4.0.0",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4",
