@@ -15,10 +15,19 @@ const CHECKOUT_URL =
     ? taptree_modal_params.checkout_origin + '/lounge'
     : 'https://checkout.taptree.org/lounge';
 
+/**
+ * Popup size in CSS pixels. Also used by the opener to correct browsers that
+ * ignore the width/height in the window-features string.
+ */
+export const POPUP_DIMENSIONS = { width: 608, height: 830 };
+
 export const TapTreeCheckout = create({
   tag: 'taptree-checkout',
   url: CHECKOUT_URL,
-  dimensions: { width: '608px', height: '830px' },
+  dimensions: {
+    width: `${POPUP_DIMENSIONS.width}px`,
+    height: `${POPUP_DIMENSIONS.height}px`,
+  },
 
   // Disable zoid's default blue prerender spinner.
   // The popup shows a blank white page until the lounge URL loads.

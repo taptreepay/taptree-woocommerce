@@ -8,7 +8,7 @@
  */
 
 import {CONTEXT} from '@krakenjs/zoid';
-import {TapTreeCheckout} from './taptreeCheckout.js';
+import {POPUP_DIMENSIONS, TapTreeCheckout} from './taptreeCheckout.js';
 
 class FormHandler {
   /**
@@ -124,6 +124,7 @@ class FormHandler {
       const origOpen = window.open;
       window.open = (...args) => {
         this.popupWindow = origOpen.apply(window, args);
+        this.enforcePopupSize();
         return this.popupWindow;
       };
 
@@ -135,10 +136,16 @@ class FormHandler {
               .then((result) => {
                 this.config.orderPayUrl = result.order_pay_url;
                 this.config.thankYouUrl = result.thank_you_url;
-                actions.navigate(result.redirect);
+                // Returned, not fired and forgotten: navigate() settles through
+                // post-robot. Dropping it means a rejected navigation leaves the
+                // popup on the loading screen with no error reaching anyone.
+                return actions.navigate(result.redirect);
               })
               .catch((err) => {
-                console.error('[TapTree] Payment intent failed:', err);
+                console.error(
+                  '[TapTree] Could not hand the payment to the popup:',
+                  err
+                );
                 paymentResolved = true;
                 this.closePopup();
                 this.submitError(
@@ -205,6 +212,32 @@ class FormHandler {
         window.open = origOpen;
       }
     });
+  }
+
+  /**
+   * Re-applies the intended popup size.
+   *
+   * Some browsers ignore width/height in the window-features string and open
+   * the popup at the opener's size. This only works in the synchronous moment
+   * right after window.open, while the popup still holds about:blank — once it
+   * carries the cross-origin checkout document, even reading `resizeTo` throws.
+   * Position is left alone: the browser does honour left/top, and re-centring
+   * would risk throwing the window onto a different display.
+   */
+  enforcePopupSize() {
+    const win = this.popupWindow;
+    if (!win) return;
+
+    try {
+      if (
+        win.outerWidth !== POPUP_DIMENSIONS.width ||
+        win.outerHeight !== POPUP_DIMENSIONS.height
+      ) {
+        win.resizeTo(POPUP_DIMENSIONS.width, POPUP_DIMENSIONS.height);
+      }
+    } catch (e) {
+      // Browser refused; the features string stays the primary request.
+    }
   }
 
   /**
