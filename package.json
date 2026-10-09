@@ -20,7 +20,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "commander": "^14.0.0",
     "css-loader": "^7.1.2",
-    "del": "^8.0.0",
+    "del": "^9.0.0",
     "mini-css-extract-plugin": "^2.9.2",
     "pump": "^3.0.2",
     "sass": "^1.83.0",
