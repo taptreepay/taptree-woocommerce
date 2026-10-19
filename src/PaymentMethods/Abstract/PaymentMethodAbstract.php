@@ -6,10 +6,21 @@ namespace TapTree\WooCommerce\PaymentMethods\Abstract;
 
 use TapTree\WooCommerce\PaymentMethods\Interface\PaymentMethodInterface;
 use TapTree\WooCommerce\SDK\TemplateRenderer;
+use TapTree\WooCommerce\Settings\ConsumerImpact;
 use TapTree\WooCommerce\Settings\SettingsHelper;
 
 abstract class PaymentMethodAbstract implements PaymentMethodInterface
 {
+    private const IMPACT_PLACEHOLDER_PATTERN = '/{{\s*[#^\/]?\s*impact\s*}}/';
+
+    /** Former built-in checkout texts that must not survive in stored settings. */
+    private const LEGACY_DESCRIPTIONS = [
+        'Mit dieser Zahlungsart kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.',
+        'Mit dieser Zahlungsart kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.',
+        'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.',
+        'Mit diesen Zahlungsarten kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.',
+    ];
+
     protected $id;
 
     protected $settingsHelper;
@@ -82,47 +93,54 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
         return $this->replacePlaceholders($description);
     }
 
-    public function getImpact()
-    {
-        // Ensure WooCommerce and session exist
-        if (!WC() || !WC()->session) {
-            return null;
-        }
-
-        // Fetch impact data from the session
-        $impactData = WC()->session->get('taptree_impact');
-
-        // Ensure impact data is properly structured
-        if (
-            !isset($impactData->available_payment_methods) ||
-            !is_object($impactData->available_payment_methods) ||
-            !isset($impactData->available_payment_methods->{$this->getId()}) ||
-            !isset($impactData->available_payment_methods->{$this->getId()}->impact)
-        ) {
-            return null;
-        }
-
-        // Return the specific impact object for the current payment method
-        return $impactData->available_payment_methods->{$this->getId()}->impact;
-    }
-
     protected function replacePlaceholders($text)
     {
-        $impact = $this->getImpact();
-
-        // Format the impact value and unit into a single string
-        $impactFormatted = $impact
-            ? sprintf('%s %s', number_format(floatval($impact->value ?? 0), 0, ',', '.'), $impact->unit ?? '')
-            : '';
-
-        $data = [
-            'impact' => preg_replace('/CO2/', 'CO₂', $impactFormatted), // Pass as a single formatted string
-        ];
-
-        return TemplateRenderer::render($text, $data);
+        // {{impact}} is retired: the chooser never shows a figure, so a stored placeholder prints nothing.
+        return TemplateRenderer::render($text, ['impact' => '']);
     }
 
+    /**
+     * Resets the stored checkout description to the current default when it
+     * still contains the retired {{impact}} placeholder or equals a former
+     * built-in text. Idempotent; every other stored setting is left untouched.
+     */
+    public function resetLegacyDescription(): void
+    {
+        $optionName = $this->settingsHelper->getGatewayId($this->getId()) . '_settings';
+        $settings = get_option($optionName, false);
+        if (!is_array($settings) || !isset($settings['description'])) {
+            return;
+        }
 
+        $stored = trim((string) $settings['description']);
+        $isLegacy = preg_match(self::IMPACT_PLACEHOLDER_PATTERN, $stored) === 1
+            || in_array($stored, self::LEGACY_DESCRIPTIONS, true);
+        if (!$isLegacy) {
+            return;
+        }
+
+        $settings['description'] = $this->getProps()['default_description'];
+        update_option($optionName, $settings, true);
+    }
+
+    /**
+     * Sets the stored 'show_impact' setting to 'no'. A 'yes' saved by an earlier
+     * version was the default of the retired CO₂ display, persisted on first load
+     * without any merchant action, and is indistinguishable from a deliberate tick;
+     * neither is consent to the project contribution, so both are reset. Idempotent;
+     * every other stored setting is left untouched.
+     */
+    public function resetLegacyImpactOptIn(): void
+    {
+        $optionName = $this->settingsHelper->getGatewayId($this->getId()) . '_settings';
+        $settings = get_option($optionName, false);
+        if (!is_array($settings) || ($settings['show_impact'] ?? null) === 'no') {
+            return;
+        }
+
+        $settings['show_impact'] = 'no';
+        update_option($optionName, $settings, true);
+    }
 
     protected function getSharedFormFields($defaultTitle, $defaultDescription): array
     {
@@ -137,16 +155,16 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
                 'title' => __('Titel', 'woocommerce'),
                 'type' => 'text',
                 'label' => __('Titel der Zahlungsmethode festlegen', 'woocommerce'),
-                'description' => __('Gib den Titel der Zahlungsmethode ein, der den Kunden angezeigt wird.', 'woocommerce'),
+                'description' => __('Gib den Titel der Zahlungsmethode ein, der im Checkout angezeigt wird.', 'woocommerce'),
                 'default' => $defaultTitle,
                 'desc_tip' => true,
             ),
             'show_impact' => array(
-                'title' => __('Impact anzeigen', 'woocommerce'),
+                'title' => __('Projektbeitrag', 'woocommerce'),
                 'type' => 'checkbox',
-                'label' => __('Zeige den Impact der Zahlung im Checkout und auf der Bestätigungsseite', 'woocommerce'),
-                'description' => __('Aktiviere diese Option, um den durch Zahlungen generierten Impact im Checkout und auf der Bestätigungsseite anzuzeigen.', 'woocommerce'),
-                'default' => 'yes',
+                'label' => __('Projektbeitrag je Zahlung anzeigen', 'woocommerce'),
+                'description' => $this->getConsumerImpactFieldDescription(),
+                'default' => 'no',
                 'desc_tip' => true,
             ),
             'show_method_description' => array(
@@ -159,10 +177,7 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
                 'title' => __('Beschreibung', 'woocommerce'),
                 'type' => 'textarea',
                 'label' => __('Definiere die Beschreibung dieser Zahlungsmethode', 'woocommerce'),
-                'description' => __(
-                    'Verwende {{impact}} als Platzhalter, um den Umweltimpact dynamisch anzuzeigen und HTML-Tags zur Formatierung.',
-                    'woocommerce'
-                ),
+                'description' => __('Du kannst HTML-Tags zur Formatierung verwenden.', 'woocommerce'),
                 'default' => $defaultDescription,
                 'desc_tip' => true,
             ),
@@ -170,10 +185,29 @@ abstract class PaymentMethodAbstract implements PaymentMethodInterface
                 'title' => __('Weiterleitung', 'woocommerce'),
                 'type' => 'checkbox',
                 'label' => __('Weiterleitung zum Checkout', 'woocommerce'),
-                'description' => __('Aktiviere diese Option, wenn deine Kunden zum TapTree Checkout Formular weitergeleitet werden sollen, anstatt ein Popup zu öffnen.', 'woocommerce'),
+                'description' => __('Aktiviere diese Option, wenn der Checkout zum TapTree-Checkout-Formular weiterleiten soll, statt ein Popup zu öffnen.', 'woocommerce'),
                 'default' => 'no',
                 'desc_tip' => true,
             ),
+        );
+    }
+
+    /**
+     * Help text of the 'show_impact' field. It names the units that may be shown so
+     * the admin screen stays truthful when the allow-list changes.
+     */
+    private function getConsumerImpactFieldDescription(): string
+    {
+        $description = __('Zeigt auf der Bestätigungsseite den Projektbeitrag je Zahlung an, sobald TapTree dafür eine Einheit liefert, die im Shop angezeigt werden darf.', 'woocommerce');
+
+        if (!ConsumerImpact::hasAllowedUnits()) {
+            return $description . ' ' . __('Derzeit gibt es keine solche Einheit; es wird nichts angezeigt.', 'woocommerce');
+        }
+
+        return $description . ' ' . sprintf(
+            /* translators: Placeholder: comma-separated list of units */
+            __('Zulässige Einheiten: %s.', 'woocommerce'),
+            implode(', ', ConsumerImpact::allowedUnits())
         );
     }
 }

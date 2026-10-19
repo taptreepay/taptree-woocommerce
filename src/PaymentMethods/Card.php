@@ -17,7 +17,7 @@ class Card extends PaymentMethodAbstract implements PaymentMethodInterface
             'id' => 'card',
             'default_title' => __('Kreditkarte und Apple Pay', 'woocommerce'),
             'settings_description' => __('Zahlungen per Kreditkarte und Apple Pay akzeptieren.', 'woocommerce'),
-            'default_description' => __('Mit Kreditkarte oder Apple Pay bezahlen und zusätzlich <b>{{impact}}</b> entfernen – sicher, kostenlos und ohne zusätzlichen Aufwand.', 'woocommerce'),
+            'default_description' => __('Mit Kreditkarte oder Apple Pay sicher bezahlen.', 'woocommerce'),
             'has_fields' => false,
             'instructions' => true,
             'supports' => [

@@ -15,6 +15,7 @@ use WP_Error;
 use Exception;
 use TapTree\WooCommerce\PaymentMethods\Interface\PaymentMethodInterface;
 use TapTree\WooCommerce\Settings\SettingsHelper;
+use TapTree\WooCommerce\Settings\ConsumerImpact;
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
@@ -64,7 +65,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     public $webhookSlug;
 
-    protected $impact;
+    /** The 'show_impact' setting: 'yes' when the merchant opted in to the per-payment contribution. */
+    protected $show_impact = 'no';
 
     /**
      * @var bool
@@ -99,7 +101,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         // Todo move this if we have more methods than just the hosted checkout
         $this->method_title        = 'TapTree | ' . $this->paymentMethod->getProp('default_title');
         $this->method_description  = $this->paymentMethod->getProp('settings_description');
-        $this->standardDescription = __('Mit dieser Zahlungsart kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, erfolgt eine Weiterleitung zum TapTree Payments Formular.');
+        $this->standardDescription = __('Zur Bezahlung erfolgt eine Weiterleitung zum TapTree-Payments-Formular.');
 
         $this->init_form_fields();
         $this->init_settings();
@@ -107,7 +109,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         $this->enabled = $this->paymentMethod->getProp('enabled');
         $this->as_redirect = $this->paymentMethod->getProp('as_redirect');
         $this->title = $this->paymentMethod->getProp('title');
-        $this->show_impact = $this->paymentMethod->getProp('show_impact');
+        $this->show_impact = $this->get_option('show_impact', 'no');
 
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
@@ -117,7 +119,7 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
             $this->paymentService->setGateway($this, $this->api);
 
             if ($this->as_redirect === 'no') {
-                $this->standardDescription = __('Mit dieser Zahlungsart kostenlos und ohne Anmeldung Klimaschutzprojekte unterstützen. Für weitere Infos und zur Bezahlung, wird das sichere TapTree Payments Browserfenster geöffnet.');
+                $this->standardDescription = __('Zur Bezahlung wird das sichere TapTree-Payments-Browserfenster geöffnet.');
                 add_action('wp_ajax_taptree_custom_pay_for_order', [$this, 'processPaymentFromPayForOrder']); // For logged-in users
                 add_action('wp_ajax_nopriv_taptree_custom_pay_for_order', [$this, 'processPaymentFromPayForOrder']); // For guests
                 add_action('wp_enqueue_scripts', [$this, 'initModal']); // Load modal script and enqueue data
@@ -138,9 +140,8 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
 
-            if ($this->show_impact === 'yes') {
-                add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
-            }
+            // Renders the method icon and refreshes the description in the checkout.
+            add_action('woocommerce_after_calculate_totals', array($this, 'action_cart_calculate_totals'));
 
             add_action('woocommerce_api_' . $this->webhookSlug, array($this->paymentService, 'onPaymentGatewayWebhookCalled'));
         } else {
@@ -258,9 +259,9 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
         return $domain;
     }
 
-    public function setPaymentMethodIcon($impactTitle = null)
+    public function setPaymentMethodIcon()
     {
-        $defaultIcon = PaymentMethodImageBuilder::set_payment_image($this, $impactTitle);
+        $defaultIcon = PaymentMethodImageBuilder::set_payment_image($this);
 
         $this->icon = apply_filters(
             $this->id . '_icon_url',
@@ -872,14 +873,16 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
                 );
             }
         } elseif ($payment->status === "authorized" || $payment->status === "paid") {
-            if ($this->show_impact === 'yes' && isset($payment->impact->value) && isset($payment->impact->unit)) {
+            $contribution = ConsumerImpact::renderable($payment->impact ?? null, $this->show_impact === 'yes');
+            if ($contribution !== null) {
                 return sprintf(
-                    /* translators: Placeholder 1: payment method */
+                    /* translators: Placeholder 1: payment method, placeholder 2: project contribution text */
                     __(
-                        'Payment erfolgreich mit %s.<br/>Mit deiner Zahlung haben wir ' . str_replace(".", ",", $payment->impact->value) . ' ' . $payment->impact->unit . ' gebunden.',
+                        'Payment erfolgreich mit %1$s.<br/>%2$s',
                         'taptree-payments-for-woocommerce'
                     ),
-                    $this->paymentService->getPaymentMethodDetails($payment)
+                    $this->paymentService->getPaymentMethodDetails($payment),
+                    $contribution['text']
                 );
             }
 
@@ -898,119 +901,25 @@ class TapTreePaymentGateway extends WC_Payment_Gateway
 
     function action_cart_calculate_totals($cart)
     {
-        $this->updateImpactIfTotalsChanged($cart);
-
         if ($this->paymentMethod->getProp('show_method_description') === 'yes') {
             $this->description = $this->set_payment_description();
         }
 
-
-        $this->setImpactTitle();
+        $this->setPaymentMethodIcon();
     }
 
     // hook to build up the payment method icon on the order pay page
     public function handleOrderPayPage()
     {
-        $this->setImpactTitle();
+        $this->setPaymentMethodIcon();
     }
 
-    private function updateImpactIfTotalsChanged($cart)
+    /**
+     * Always ''. The chooser shows no figure; kept because themes called it before 2.1.4.
+     */
+    public function getImpactTitle(): string
     {
-        if (is_admin() && !wp_doing_ajax())
-            return;
-
-        if ($cart->is_empty())
-            return;
-
-        $cart->get_cart();
-        $total = $this->getCartTotal($cart);
-        $this->impact = WC()->session->get('taptree_impact');
-        if ($this->impact && !is_wp_error($this->impact) && isset($this->impact->amount->value) && (strcmp($this->impact->amount->value, $total) === 0)) {
-            return;
-        }
-        // retrieve the impact from the API
-        try {
-            $result = $this->api->get_impact_info($total, false);
-            if (is_wp_error($result)) {
-                $this->logger->debug(__METHOD__ . " | API error: " . $result->get_error_message());
-                return;
-            }
-            $this->impact = $result;
-        } catch (\Exception $e) {
-            $this->logger->debug(__METHOD__ . " | Exception: " . $e->getMessage());
-            return;
-        } catch (Exception $e) {
-            $this->logger->debug(__METHOD__ . " | Exception: " . $e->getMessage());
-            return;
-        }
-
-        // store the impact in the session
-        WC()->session->set(
-            'taptree_impact',
-            $this->impact
-        );
-        $this->logger->debug(__METHOD__ . " | new impact:  " . json_encode($this->impact));
-        // force a refresh of the title and description
-        //$this->description = $this->set_payment_description();
-        //WC()->session->set('reload_checkout ', 'true');
-    }
-
-    private function getCartTotal($cart)
-    {
-        if (!$cart)
-            return;
-
-        $cart->get_cart();
-
-        try {
-            $total = $cart->total;
-            if ($total != 0)
-                return $total;
-
-            // some hacky way to get the total amount
-            // we need this as the Germanized plugin set cart->total to 0
-            $total_str = preg_replace('#[^\d.,]#', '', $cart->get_cart_total());
-
-            if (preg_match('/^\d+[.]\d+$/', $total_str)) {
-                return $total_str;
-            }
-
-            $split = preg_split('/[.,]/', $total_str);
-            $total = implode(array_slice($split, 0, -1, true)) . '.' . end($split);
-            return $total;
-        } catch (\Exception $e) {
-            return;
-        } catch (Exception $e) {
-            return;
-        }
-    }
-
-
-
-    private function setImpactTitle()
-    {
-        $impactTitle = $this->getImpactTitle();
-        $this->setPaymentMethodIcon($impactTitle);
-    }
-
-    private function getImpact()
-    {
-        if (!WC() || !WC()->session) {
-            return null;
-        }
-        $this->impact = WC()->session->get('taptree_impact');
-
-        return $this->impact;
-    }
-
-    public function getImpactTitle()
-    {
-        $currentImpact = $this->getImpact();
-        if ($currentImpact) {
-            return __(number_format(floatval($currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->value), 0, ',', '.') . ' ' . $currentImpact->available_payment_methods->{$this->paymentMethod->getId()}->impact->unit, 'taptree-payments-for-woocommerce');
-        }
-
-        return __(null, 'taptree-payments-for-woocommerce');
+        return '';
     }
 
 

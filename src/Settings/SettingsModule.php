@@ -13,6 +13,7 @@ use TapTree\WooCommerce\Api\TapTreeApi;
 use TapTree\WooCommerce\Settings\SettingsHelper;
 use TapTree\WooCommerce\Settings\Page\TapTreeSettingsPage;
 use TapTree\WooCommerce\Notice\AdminNotice;
+use TapTree\WooCommerce\PaymentMethods\Abstract\PaymentMethodAbstract;
 use Psr\Container\ContainerInterface;
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
@@ -71,8 +72,10 @@ class SettingsModule implements ServiceModule, ExecutableModule
             $this->needToShowTestModeNotice();
         });
 
-        $paymentGateways = $container->get('gateway.instances');
         $paymentMethods = $container->get('gateway.payment_methods');
+        // Must run before the gateways are built: they read 'show_impact' and their description on construction.
+        $this->migrateLegacyImpactSettings($paymentMethods, $pluginVersion);
+        $paymentGateways = $container->get('gateway.instances');
         $this->initGlobalTapTreeSettingsPage($paymentGateways, $paymentMethods);
 
         return true;
@@ -138,6 +141,33 @@ class SettingsModule implements ServiceModule, ExecutableModule
             '</a>'
         );
         $notice->addNotice('notice-info', $message);
+
+        update_option($stampOpt, $pluginVersion);
+    }
+
+    /**
+     * Once, on the first run of 2.1.4 or later, migrates the stored settings of the
+     * retired CO₂ display: the 'show_impact' opt-in is set to 'no' for every payment
+     * method (a value saved by an earlier version was that display's default, not
+     * consent to the project contribution), and checkout descriptions that still
+     * carry the {{impact}} placeholder or a former built-in text are reset. {{impact}}
+     * is retired for good; the reset runs once. The stamp holds the version that ran
+     * the migration; the migration itself is idempotent, so concurrent requests are
+     * harmless.
+     */
+    private function migrateLegacyImpactSettings(array $paymentMethods, string $pluginVersion): void
+    {
+        $stampOpt = $this->settingsHelper->getSettingId('impact_migration_version');
+        if (get_option($stampOpt)) {
+            return;
+        }
+
+        foreach ($paymentMethods as $paymentMethod) {
+            if ($paymentMethod instanceof PaymentMethodAbstract) {
+                $paymentMethod->resetLegacyImpactOptIn();
+                $paymentMethod->resetLegacyDescription();
+            }
+        }
 
         update_option($stampOpt, $pluginVersion);
     }

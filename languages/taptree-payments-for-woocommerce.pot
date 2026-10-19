@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: TapTree Payments for WooCommerce 2.0.8\n"
+"Project-Id-Version: TapTree Payments for WooCommerce 2.1.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/taptree-payments-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr ""
 
 #. Description of the plugin
 #: taptree-payments-for-woocommerce.php
-msgid "Accept payments and protect the climate in WooCommerce with the official TapTree WooCommerce plugin"
+msgid "Accept cards, Apple Pay, PayPal and local payment methods in WooCommerce with the official TapTree plugin."
 msgstr ""
 
 #. Author of the plugin
@@ -39,16 +39,16 @@ msgstr ""
 msgid "https://taptree.org/"
 msgstr ""
 
-#: src/Gateway/TapTreePaymentGateway.php:353
+#: src/Gateway/TapTreePaymentGateway.php:355
 msgid "Unavailable order %s"
 msgstr ""
 
-#: src/Gateway/TapTreePaymentGateway.php:425
+#: src/Gateway/TapTreePaymentGateway.php:427
 msgid "Customer started "
 msgstr ""
 
 #. translators: Placeholder 1: Payment method title
-#: src/Gateway/TapTreePaymentGateway.php:443
+#: src/Gateway/TapTreePaymentGateway.php:445
 msgid "Could not create %s payment."
 msgstr ""
 
@@ -57,21 +57,21 @@ msgstr ""
 msgid "Refunded %1$s %2$s %3$s - Payment: %4$s, Refund: %5$s"
 msgstr ""
 
-#: src/Gateway/TapTreePaymentGateway.php:810
+#: src/Gateway/TapTreePaymentGateway.php:852
 msgid "Wir haben noch keinen endgültigen Zahlungsstatus erhalten."
 msgstr ""
 
-#: src/Gateway/TapTreePaymentGateway.php:816
+#: src/Gateway/TapTreePaymentGateway.php:858
 msgid "Wir haben noch keinen endgültigen Zahlungsstatus erhalten. Sie werden eine E-Mail erhalten, sobald wir eine Bestätigung der Bank erhalten."
 msgstr ""
 
-#. translators: Placeholder 1: payment method
-#: src/Gateway/TapTreePaymentGateway.php:825
-msgid "Payment erfolgreich mit %s.<br/>Mit deiner Zahlung haben wir "
+#. translators: Placeholder 1: payment method, placeholder 2: project contribution text
+#: src/Gateway/TapTreePaymentGateway.php:880
+msgid "Payment erfolgreich mit %1$s.<br/>%2$s"
 msgstr ""
 
 #. translators: Placeholder 1: payment method
-#: src/Gateway/TapTreePaymentGateway.php:835
+#: src/Gateway/TapTreePaymentGateway.php:891
 msgid "Payment erfolgreich mit %s."
 msgstr ""
 
@@ -91,6 +91,6 @@ msgstr ""
 msgid "Payment ("
 msgstr ""
 
-#: src/Settings/SettingsModule.php:99
+#: src/Settings/SettingsModule.php:182
 msgid "%1$sTapTree Payments for WooCommerce%2$s Test mode is active, %3$s enable live mode%4$s before going into production."
 msgstr ""

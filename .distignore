@@ -20,3 +20,10 @@ package.json
 webpack.config.js
 .babelrc
 .distignore
+
+# Local tooling and OS files
+.claude/
+.DS_Store
+
+# Assets no longer rendered by the plugin
+public/map/
