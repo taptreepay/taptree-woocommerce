@@ -1,5 +1,5 @@
 class AnimatedSpinner {
-  constructor(lines = ['Sie werden weitergeleitet ...']) {
+  constructor(lines = ['Du wirst weitergeleitet ...']) {
     this.lines = lines;
     this.wrapper = null;
   }
