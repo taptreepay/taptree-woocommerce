@@ -2,7 +2,7 @@
 Contributors: taptree
 Tags: payments, checkout, woocommerce, credit card, payment gateway
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.1
 Stable tag: 2.1.4
 Requires PHP: 8.0
 License: GPLv3 or later
@@ -56,6 +56,7 @@ Buy Now Pay Later (BNPL)
 == Changelog ==
 
 = 2.1.4 =
+* Tested with WordPress 7.1 and WooCommerce 11.2.
 * Per-payment figures are now a configurable opt-in with an allow-list of units; none is enabled; the previous CO₂ display is retired.
 * The setting is called "Projektbeitrag je Zahlung anzeigen" (formerly "Impact anzeigen") and is off for every payment method after the update, also where an earlier version had saved it as on; turn it on per payment method once a unit is enabled.
 * The per-method figure in the checkout and on the order-pay page is gone for good.

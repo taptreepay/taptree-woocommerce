@@ -11,6 +11,7 @@
  * Text Domain:       taptree-payments-for-woocommerce
  * License:           GPLv3 or later
  * WC requires at least: 7.0
+ * WC tested up to:     11.2
  * Requires PHP:      8.0
  */
 
