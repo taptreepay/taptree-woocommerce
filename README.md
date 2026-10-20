@@ -41,14 +41,16 @@ Buy Now Pay Later (BNPL)
 ## Features
 
 - Popup or redirect checkout, configurable per payment method
-- Per-payment project contribution on the thank-you page as an opt-in per payment method, limited to units TapTree has cleared for shoppers (none at the moment, see below)
+- Optional line about TapTree's forest projects on the thank-you page (not active yet, see below)
 - Support for refunds from WooCommerce
 - Test mode with sandbox API keys
 - Debugging log
 
-## Per-payment project contribution
+## The “Projektbeitrag je Zahlung anzeigen” setting
 
-Each payment method has the setting "Projektbeitrag je Zahlung anzeigen" (off by default, also after updating from an earlier version). When it is on, the thank-you page shows the project contribution for a payment, but only in units that TapTree has cleared for display to shoppers; the payment-method chooser never shows a figure. That allow-list lives in `src/Settings/ConsumerImpact.php` (`CONSUMER_UNITS`) and is empty, so nothing is shown at the moment; CO₂ figures are never shown to shoppers.
+Each payment method has a setting called “Projektbeitrag je Zahlung anzeigen” (show project contribution per payment). It is meant to add one line about these projects to your thank-you page. Since the rules for environmental claims changed in September 2026, TapTree is still working out how that line may be worded, so the setting is off and does nothing for now. Your customers never see CO₂ figures or any other number from the plugin. It stays off after updating from an earlier version.
+
+For developers: the wordings cleared for customers live in `src/Settings/ConsumerImpact.php` (`CONSUMER_UNITS`); the list is empty.
 
 ## About TapTree
 

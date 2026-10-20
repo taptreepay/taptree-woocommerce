@@ -1,0 +1,25 @@
+name: Update readme and assets on WordPress.org
+
+# A readme or banner change reaches the plugin directory without a release:
+# the action commits readme.txt and .wordpress-org/ to SVN trunk and the stable tag.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - readme.txt
+      - .wordpress-org/**
+
+jobs:
+  trunk:
+    name: Push readme and assets to trunk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: WordPress.org readme and asset update
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SLUG: taptree-payments-for-woocommerce

@@ -16,9 +16,7 @@ Connect your WooCommerce store to TapTree and accept cards, Apple Pay, PayPal, l
 
 By default, payment opens in a secure TapTree popup window while your store stays open in the background. If the browser blocks the popup, the customer is redirected to TapTree's hosted checkout page instead. For each payment method you can also switch to a full redirect. Refunds can be issued directly from the WooCommerce order.
 
-Each payment method has the setting "Projektbeitrag je Zahlung anzeigen" (off by default). When it is on, the thank-you page shows the project contribution for a payment, but only in units TapTree has cleared for display to shoppers; the payment-method chooser never shows a figure. No unit is cleared at the moment, so the setting currently shows nothing. CO₂ figures are never shown to shoppers.
-
-A fixed share of what TapTree earns on payments goes into forest protection and reforestation. [Learn more](https://taptree.org/impact)
+**TapTree's forest projects.** TapTree puts a fixed share of what it earns on payments into forest protection and reforestation. In the plugin, each payment method has a setting called “Projektbeitrag je Zahlung anzeigen” (show project contribution per payment). It is meant to add one line about these projects to your thank-you page. Since the rules for environmental claims changed in September 2026, TapTree is still working out how that line may be worded, so the setting is off and does nothing for now. Your customers never see CO₂ figures or any other number from the plugin. [Learn more](https://taptree.org/impact)
 
 == Available payment methods ==
 Credit and debit cards:
