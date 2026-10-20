@@ -48,7 +48,7 @@ Buy Now Pay Later (BNPL)
 
 ## The “Projektbeitrag je Zahlung anzeigen” setting
 
-Each payment method has a setting called “Projektbeitrag je Zahlung anzeigen” (show project contribution per payment). It is meant to add one line about these projects to your thank-you page. Since the rules for environmental claims changed in September 2026, TapTree is still working out how that line may be worded, so the setting is off and does nothing for now. Your customers never see CO₂ figures or any other number from the plugin. It stays off after updating from an earlier version.
+TapTree puts a fixed share of what it earns on payments into forest protection and reforestation. Each payment method in the plugin has a setting called “Projektbeitrag je Zahlung anzeigen” (show project contribution per payment), meant to add one line about these forest projects to your thank-you page. Since the rules for environmental claims changed in September 2026, TapTree is still working out how that line may be worded. Until then the setting does nothing and stays off, also after updating from an earlier version, and your customers never see CO₂ figures or any other number from the plugin.
 
 For developers: the wordings cleared for customers live in `src/Settings/ConsumerImpact.php` (`CONSUMER_UNITS`); the list is empty.
 
