@@ -50,7 +50,7 @@ class TapTreeSettingsPage extends WC_Settings_Page
         add_action('woocommerce_admin_field_api_key', [$this, 'generate_api_key_html']);
         add_action('woocommerce_settings_saved', [$this, 'toggle_need_to_refresh']);
 
-        if ($_POST['refresh_payment_methods'] === 'yes') {
+        if (($_POST['refresh_payment_methods'] ?? '') === 'yes') {
             $this->refresh_payment_methods();
         };
 
