@@ -9,6 +9,8 @@ on:
     paths:
       - readme.txt
       - .wordpress-org/**
+      - .github/workflows/readme-assets.yml
+  workflow_dispatch:
 
 jobs:
   trunk:
@@ -23,3 +25,5 @@ jobs:
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SLUG: taptree-payments-for-woocommerce
+          # Only readme.txt and the assets directory; the built plugin files in trunk stay as the release left them.
+          IGNORE_OTHER_FILES: 'true'
